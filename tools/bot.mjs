@@ -3,13 +3,19 @@
 // region is. It says nothing about whether a human finds the solution,
 // understands it, or enjoys it.
 //
-// Usage: node tools/bot.mjs [levelId ...] [--out=file.json]
+// Usage: node tools/bot.mjs [levelId ...] [--out=file.json] [--need] [--coarse] [--levels=path]
+//   --need    for each special ammo type (heavy, ember) replace it with normal
+//             and search again: if no solution is found, that type is needed
+//             (only within this search method; "not found" is not a proof)
+//   --coarse  2-degree first-shot grid (for quick design probes)
+//   --levels  load LEVELS from another module (design probes)
 import { Worker, isMainThread, parentPort } from 'node:worker_threads';
 import { writeFileSync } from 'node:fs';
 import os from 'node:os';
 
 const MODE = '3d';
-const GRID = { aStep: 10, bStep: 10 };      // 1.0 deg yaw, 1.0 deg pitch
+const COARSE = process.argv.includes('--coarse');
+const GRID = COARSE ? { aStep: 20, bStep: 20 } : { aStep: 10, bStep: 10 }; // yaw, pitch in 0.1 deg
 const FOLLOWUP = { aStep: 20, bStep: 20 };  // coarser grid for later shots
 const BEAM = 4;
 
@@ -35,8 +41,10 @@ if (!isMainThread) {
   });
 } else {
   const { INPUT, AMMO_ORDER, PARAMS, MATERIALS, AMMO } = await import('../src/sim.js');
-  const { LEVELS } = await import('../src/levels.js');
   const args = process.argv.slice(2);
+  const lvArg = args.find((x) => x.startsWith('--levels='));
+  const { LEVELS } = await import(lvArg ? new URL('file://' + (await import('node:path')).resolve(lvArg.slice(9))) : '../src/levels.js');
+  const NEED = args.includes('--need');
   const ids = args.filter((x) => /^\d+$/.test(x)).map(Number);
   const outArg = args.find((x) => x.startsWith('--out='));
   const levels = ids.length ? LEVELS.filter((l) => ids.includes(l.id)) : LEVELS;
@@ -96,12 +104,12 @@ if (!isMainThread) {
     method: {
       note: 'Oran yalnizca taranan sinirlar ve adim buyuklugu icindeki atislari kapsar. Oyuncunun cozumu bulacagini veya bolumun eglenceli oldugunu gostermez. Adimlar arasinda kalan dar cozumler bulunamayabilir.',
       bounds: { yaw: [lim.a.min / 10, lim.a.max / 10], pitch: [lim.b.min / 10, lim.b.max / 10] }, grid: GRID, followup: FOLLOWUP, beam: BEAM,
+      need: NEED ? 'Ozel mermi normal Gulle ile degistirilip ayni arama tekrarlandi. "Gerekli" = bu aramada o mermi olmadan cozum bulunamadi; imkansizlik kaniti degildir.' : undefined,
     },
     levels: [],
   };
 
-  for (const level of levels) {
-    const t0 = Date.now();
+  async function solve(level) {
     const counts = {};
     for (const t of level.ammo) counts[t] = (counts[t] || 0) + 1;
     const types = AMMO_ORDER.filter((t) => counts[t]);
@@ -135,10 +143,25 @@ if (!isMainThread) {
       }
       if (!entry.solution) entry.solution = { shots: null, note: 'Bu arama yontemi ve cozunurlukte cozum bulunamadi.' };
     }
+    return { entry, types, byType };
+  }
+
+  for (const level of levels) {
+    const t0 = Date.now();
+    const { entry, types, byType } = await solve(level);
+    if (NEED) {
+      entry.need = {};
+      for (const t of types.filter((x) => x !== 'normal')) {
+        const alt = { ...level, ammo: level.ammo.map((x) => (x === t ? 'normal' : x)) };
+        const r = await solve(alt);
+        entry.need[t] = { needed: r.entry.solution.shots == null, withoutIt: r.entry.solution };
+      }
+    }
     entry.seconds = (Date.now() - t0) / 1000;
     report.levels.push(entry);
     const parts = types.map((t) => `${t} %${(byType[t].winRatio * 100).toFixed(1)} (bolge ${byType[t].largestRegionCells}, saglam ${byType[t].robustWinCells}${byType[t].nestBrokenCells ? ', yuva kirilan ' + byType[t].nestBrokenCells : ''})`);
-    console.log(`B${level.id} ${level.name.padEnd(14)} ${parts.join(' | ')} || cozum: ${entry.solution.shots ?? 'YOK'} atis ${entry.solution.sequence ? JSON.stringify(entry.solution.sequence) : ''} (${entry.seconds}s)`);
+    const need = entry.need ? ' || gerekli mi: ' + Object.entries(entry.need).map(([t, n]) => `${t} ${n.needed ? 'EVET' : 'hayir (' + JSON.stringify(n.withoutIt.sequence) + ')'}`).join(', ') : '';
+    console.log(`B${level.id} ${level.name.padEnd(14)} ${parts.join(' | ')} || cozum: ${entry.solution.shots ?? 'YOK'} atis ${entry.solution.sequence ? JSON.stringify(entry.solution.sequence) : ''}${need} (${entry.seconds}s)`);
   }
   if (outArg) writeFileSync(outArg.slice(6), JSON.stringify(report, null, 2));
   await Promise.all(workers.map((w) => w.terminate()));

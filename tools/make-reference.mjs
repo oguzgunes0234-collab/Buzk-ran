@@ -11,9 +11,22 @@ for (const e of bot.levels) {
   if (!e.solution || !e.solution.sequence) throw new Error('no solution for B' + e.level);
   cases.push({ name: 'B' + e.level + ' kazanan', level: e.level, mode: '3d', shots: e.solution.sequence });
 }
-// a miss first, then the known solution (level 10 has a spare heavy ball)
+// a miss first, then the known solution (level 10 has a spare normal ball);
+// the miss is picked so that the solution still wins afterwards
 const b10 = bot.levels.find((x) => x.level === 10).solution.sequence;
-cases.push({ name: 'B10 ıska + çözüm', level: 10, mode: '3d', shots: [{ t: 'heavy', a: -150, b: 700 }, ...b10] });
+const lv10 = LEVELS.find((l) => l.id === 10);
+let miss = null;
+for (const cand of [{ t: 'normal', a: 150, b: 50 }, { t: 'normal', a: 150, b: 700 }, { t: 'normal', a: 0, b: 50 }, { t: 'normal', a: -150, b: 700 }]) {
+  const s = new Sim(lv10, '3d');
+  s.runShot(cand.a, cand.b, cand.t);
+  const untouched = s.cagesLeft() === lv10.cages.length && s.totemsLeft() === lv10.totems.length && s.nestsBroken() === 0;
+  for (const sh of b10) s.runShot(sh.a, sh.b, sh.t);
+  const ok = untouched && s.phase === 'won';
+  s.free();
+  if (ok) { miss = cand; break; }
+}
+if (!miss) throw new Error('no clean miss found for B10');
+cases.push({ name: 'B10 ıska + çözüm', level: 10, mode: '3d', shots: [miss, ...b10] });
 // an ember that cracks the nest (protect goal failure path)
 const lv8 = LEVELS.find((l) => l.id === 8);
 let nestShot = null;

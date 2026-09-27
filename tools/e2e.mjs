@@ -3,9 +3,10 @@
 // nest-failure paths, runs the in-page self-test, collects the summary.
 import { chromium } from 'playwright-core';
 import path from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { REFERENCE } from '../src/reference.js';
-const exe = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+mkdirSync('out', { recursive: true });
+const exe = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const browser = await chromium.launch({ executablePath: exe, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 const page = await ctx.newPage();

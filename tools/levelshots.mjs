@@ -1,6 +1,8 @@
 import { chromium } from 'playwright-core';
 import path from 'node:path';
-const exe = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+import { mkdirSync } from 'node:fs';
+mkdirSync('out', { recursive: true });
+const exe = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const browser = await chromium.launch({ executablePath: exe, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
 const page = await ctx.newPage();

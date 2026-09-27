@@ -36,6 +36,13 @@ export const PARAMS = {
   fxImpactForce: 25,  // N, only used for sound/particles, never affects physics
 };
 
+// Totems: the purple ice totem tips easily; the stone totem is heavy enough
+// that only the heavy ball should be able to tip it.
+export const TOTEM_MATS = {
+  wood: { density: 0.7 },
+  stone: { density: 70 },
+};
+
 export const MATERIALS = {
   wood: { density: 1.0, friction: 1.0, restitution: 0.05 },
   stone: { density: 3.2, friction: 1.0, restitution: 0.02 },
@@ -214,10 +221,11 @@ export class Sim {
 
   _addTotem(t, index) {
     const body = this.world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(t.x || 0, t.y, t.z));
-    const c = RAPIER.ColliderDesc.cuboid(TOTEM.w / 2, TOTEM.h / 2, TOTEM.d / 2).setDensity(0.7).setFriction(1.0).setRestitution(0.05);
+    const mat = t.mat === 'stone' ? 'stone' : 'wood';
+    const c = RAPIER.ColliderDesc.cuboid(TOTEM.w / 2, TOTEM.h / 2, TOTEM.d / 2).setDensity(TOTEM_MATS[mat].density).setFriction(1.0).setRestitution(0.05);
     if (this.fx) { c.setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS); c.setContactForceEventThreshold(PARAMS.fxImpactForce); }
     const col = this.world.createCollider(c, body);
-    const e = this._entry('totem', body, col, [TOTEM.w, TOTEM.h, TOTEM.d], { totemIndex: index, down: false, y0: t.y });
+    const e = this._entry('totem', body, col, [TOTEM.w, TOTEM.h, TOTEM.d], { totemIndex: index, down: false, y0: t.y, mat });
     this.totems.push(e);
   }
 

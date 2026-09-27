@@ -1,14 +1,17 @@
 {
   "name": "buzkiran-prototip",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Buzkıran Vadisi: fizik tabanlı kısa oturumlu mobil bulmaca oyunu için gri kutu web prototipi",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node tools/build.mjs",
+    "bot": "node tools/bot.mjs --need --out=out/bot-final.json",
+    "reference": "node tools/make-reference.mjs",
+    "e2e": "node tools/build.mjs && node tools/e2e.mjs",
+    "lostcage": "node tools/lostcage.mjs"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "dependencies": {
     "@dimforge/rapier3d-deterministic-compat": "^0.21.0",
     "esbuild": "^0.28.2",

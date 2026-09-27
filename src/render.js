@@ -130,6 +130,9 @@ export class View {
     this.iceBlockEdge = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
     this.totemMat = new THREE.MeshLambertMaterial({ color: 0x5b3f8c });
     this.totemCapMat = new THREE.MeshLambertMaterial({ color: 0x8a6cc4 });
+    this.stoneTotemMat = new THREE.MeshLambertMaterial({ color: 0x5d6673 });
+    this.stoneTotemCapMat = new THREE.MeshLambertMaterial({ color: 0x8b95a3 });
+    this.stoneTotemBandMat = new THREE.MeshLambertMaterial({ color: 0x3a4452 });
     this.totemXray = new THREE.LineBasicMaterial({ color: 0x7a55c8, transparent: true, opacity: 0.45, depthTest: false, depthWrite: false });
     this.nestMat = new THREE.MeshLambertMaterial({ color: 0x8a5a2b });
     this.eggMat = new THREE.MeshLambertMaterial({ color: 0xfaf6ea });
@@ -260,10 +263,11 @@ export class View {
       obj.castShadow = true;
     } else if (b.kind === 'totem') {
       obj = new THREE.Group();
-      const body = new THREE.Mesh(this.boxGeo, this.totemMat);
+      const stone = b.mat === 'stone';
+      const body = new THREE.Mesh(this.boxGeo, stone ? this.stoneTotemMat : this.totemMat);
       body.scale.set(TOTEM.w, TOTEM.h, TOTEM.d);
       body.castShadow = true;
-      const cap = new THREE.Mesh(this.boxGeo, this.totemCapMat);
+      const cap = new THREE.Mesh(this.boxGeo, stone ? this.stoneTotemCapMat : this.totemCapMat);
       cap.scale.set(TOTEM.w * 1.25, 0.16, TOTEM.d * 1.25);
       cap.position.y = TOTEM.h / 2 - 0.02;
       const eyeMat = new THREE.MeshBasicMaterial({ color: 0x7ff0ff });
@@ -274,6 +278,15 @@ export class View {
       xray.scale.set(TOTEM.w, TOTEM.h, TOTEM.d);
       xray.renderOrder = 10;
       obj.add(body, cap, e1, e2, xray);
+      if (stone) {
+        // darker bands so the stone totem reads as heavy even at a small size
+        for (const y of [-0.3, 0.1]) {
+          const band = new THREE.Mesh(this.boxGeo, this.stoneTotemBandMat);
+          band.scale.set(TOTEM.w + 0.02, 0.06, TOTEM.d + 0.02);
+          band.position.y = y;
+          obj.add(band);
+        }
+      }
       obj.userData.solid = body;
       obj.userData.eyes = eyeMat;
       obj.userData.size = [TOTEM.w, TOTEM.h, TOTEM.d];

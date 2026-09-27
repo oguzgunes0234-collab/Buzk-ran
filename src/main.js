@@ -259,7 +259,8 @@ function showResult(phase) {
   $('resBody').textContent = won
     ? lv.name + ' · ' + state.play.attempts + '. denemede, toplam ' + state.play.shots + ' atış'
     : nestFail ? 'Yumurtalı yuvaya zarar geldi. Aynı düzeni tekrar deneyebilirsin.'
-      : remainingText() + ' kaldı. Aynı düzeni tekrar deneyebilirsin.';
+      : remainingText() + ' kaldı. Aynı düzeni tekrar deneyebilirsin.'
+        + (s.totems.some((t) => t.mat === 'stone' && !t.down) ? ' İpucu: gri taş totemi yalnız Ağır gülle devirir.' : '');
   const tour = state.tour;
   $('resRetry').hidden = won;
   $('resNext').textContent = tour ? (tour.idx + 1 < tour.order.length ? 'Sıradaki (' + (tour.idx + 2) + '/' + tour.order.length + ')' : 'Değerlendirmeye geç') : 'Bölümler';
@@ -303,7 +304,7 @@ function stats() {
 
 function summaryText() {
   const lines = [];
-  lines.push('BUZKIRAN PROTOTİP ÖZETİ v4 (3D arkadan)');
+  lines.push('BUZKIRAN PROTOTİP ÖZETİ v4.1 (3D arkadan)');
   lines.push('Cihaz: ' + navigator.userAgent.replace(/\s+/g, ' ').slice(0, 140));
   lines.push('Ekran: ' + window.innerWidth + 'x' + window.innerHeight + ' CSS px, cihaz oranı ' + (window.devicePixelRatio || 1) + ', çizim oranı ' + view.dpr);
   const st = state.selftest;

@@ -11,8 +11,16 @@ const pillar = (x, z, yb, h = 1.8, s = 0.55, mat = 'wood') => box(x, z, yb, s, h
 const plankX = (x, z, yb, len = 2.0, t = 0.3, dep = 0.8, mat = 'wood') => box(x, z, yb, len, t, dep, mat);
 const ped = (x, z, h, w = 1.2, d = 1.2) => ({ x, y: h / 2, z, w, h, d });
 const cage = (x, z, yb) => ({ x, y: yb + CAGE_SIZE / 2 + GAP, z });
-const totem = (x, z, yb) => ({ x, y: yb + TOTEM.h / 2 + GAP, z });
+const totem = (x, z, yb, mat) => ({ x, y: yb + TOTEM.h / 2 + GAP, z, ...(mat ? { mat } : {}) });
 const nest = (x, z, yb) => ({ x, y: yb + NEST.h / 2 + GAP, z });
+// three cages side by side on one pedestal, optionally behind a low ice wall
+const cageRow = (x, z, sp, wall) => ({
+  statics: [ped(x, z, 0.6, 2 * sp + 1.0, 1.2)],
+  blocks: wall ? [box(x, z - 0.9, 0, 2 * sp + 1.0, 0.9, 0.3, 'ice')] : [],
+  cages: [cage(x + sp, z, 0.6), cage(x, z, 0.6), cage(x - sp, z, 0.6)],
+});
+const row9 = cageRow(-1.8, 6, 0.95, false);
+const row10 = cageRow(-1.8, 6.2, 0.95, true);
 
 export const LEVELS = [
   {
@@ -69,28 +77,29 @@ export const LEVELS = [
     nests: [nest(0, 4.2, 0)],
   },
   {
-    id: 9, name: 'Karışık', hint: 'Her mermiyi doğru hedefe sakla.', teaches: 'birleşim',
+    // v4.1: the stone totem can only be tipped by the heavy ball (bot: 0 hits
+    // with normal or ember), so the heavy ball is needed; for the cage row the
+    // ember is much wider than two normal shots, but not strictly needed.
+    id: 9, name: 'Karışık', hint: 'Gri taş totemi yalnız Ağır gülle devirir. Kafes sırasına en iyisi Köz.', teaches: 'taş totem, birleşim',
     speed: 14, ammo: ['normal', 'heavy', 'ember'],
-    statics: [ped(-1.9, 6.2, 0.5)],
-    blocks: [
-      box(1.9, 5, 0, 0.9, 0.9, 0.9, 'ice'),
-      pillar(0.45, 5.5, 0, 1.6), pillar(-0.45, 5.5, 0, 1.6), plankX(0, 5.5, 1.6, 1.5, 0.3, 0.8),
-      box(-1.9, 4.8, 0, 1.0, 1.2, 0.8, 'stone'),
-    ],
-    cages: [cage(0, 5.5, 1.9), cage(-1.9, 6.2, 0.5)],
-    totems: [totem(1.9, 5, 0.9)],
+    statics: [ped(2.0, 4.8, 0.5, 1.6, 1.6), ...row9.statics],
+    blocks: [...row9.blocks],
+    cages: row9.cages,
+    totems: [totem(2.0, 4.8, 0.5, 'stone')],
   },
   {
-    id: 10, name: 'Büyük kale', hint: 'Kafesleri kurtar, totemi devir, yuvayı koru.', teaches: 'birleşim',
+    // v4.1: heavy for the stone totem, ember (best) for the cage row, a normal
+    // for the tower; the nest sits in front of the tower, so heavy or ember
+    // shots to the left side put it at risk.
+    id: 10, name: 'Büyük kale', hint: 'Taş totem Ağır ister. Yuvanın yakınında Ağır ve Köz tehlikeli.', teaches: 'birleşim',
     speed: 14, ammo: ['normal', 'normal', 'heavy', 'ember'],
-    statics: [ped(0, 6.5, 1.0, 1.0, 1.0)],
+    statics: [ped(0, 4.4, 0.5, 1.4, 1.4), ...row10.statics],
     blocks: [
-      box(0, 3.2, 0, 3.0, 0.7, 0.35, 'ice'),
-      pillar(2.1, 5, 0, 1.8), pillar(1.3, 5, 0, 1.8), plankX(1.7, 5, 1.8, 1.4, 0.3, 0.8),
-      pillar(-2.1, 5, 0, 1.8), pillar(-1.3, 5, 0, 1.8), plankX(-1.7, 5, 1.8, 1.4, 0.3, 0.8),
+      pillar(2.6, 5.6, 0, 1.8), pillar(1.8, 5.6, 0, 1.8), plankX(2.2, 5.6, 1.8, 1.4, 0.3, 0.8),
+      ...row10.blocks,
     ],
-    cages: [cage(1.7, 5, 2.1), cage(-1.7, 5, 2.1), cage(0, 6.5, 1.0)],
-    totems: [totem(0.9, 7.9, 0)],
-    nests: [nest(2.8, 3.6, 0)],
+    cages: [cage(2.2, 5.6, 2.1), ...row10.cages],
+    totems: [totem(0, 4.4, 0.5, 'stone')],
+    nests: [nest(2.2, 3.9, 0)],
   },
 ];
