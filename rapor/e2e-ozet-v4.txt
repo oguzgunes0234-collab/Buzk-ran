@@ -1,0 +1,25 @@
+BUZKIRAN PROTOTİP ÖZETİ v4 (3D arkadan)
+Cihaz: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.0.0 Safari/537.36
+Ekran: 390x844 CSS px, cihaz oranı 2, çizim oranı 2
+Tutarlılık testi: 12/12 eşleşti
+Genel: oynanan 10, ilk denemede kazanılan 8, geçilen 0, ort. deneme 1.2, ort. toplam atış (tüm denemeler) 1.6, fps 7 (%1 en düşük 4), hedef görünürlüğü ort. %90 (en kötü %56), hedef boyutu ort. 34 px
+Puanlar (1-5):
+  Okunabilirlik: 4
+  Nişan hissi: -
+  Yıkım tatmini: -
+  Mermi seçimi: 5
+  Hedef çeşitliliği: -
+  Anlaşılırlık: -
+  Kaybın nedeni: -
+  Bir tane daha: -
+Bölüm ayrıntısı:
+  B1: kazandı, 1 deneme, 1 toplam atış [Gülle 1], 4.6 sn, görünürlük %100, 40 px
+  B2: kazandı, 2 deneme, 3 toplam atış [Gülle 3], 17.7 sn, görünürlük %100, 40 px
+  B3: kazandı, 1 deneme, 2 toplam atış [Gülle 2], 10.8 sn, görünürlük %100, 41 px
+  B4: kazandı, 1 deneme, 1 toplam atış [Gülle 1], 6 sn, görünürlük %78, 38 px
+  B5: kazandı, 1 deneme, 1 toplam atış [Ağır 1], 5.5 sn, görünürlük %78, 38 px
+  B6: kazandı, 1 deneme, 1 toplam atış [Köz 1], 3.9 sn, görünürlük %89, 37 px
+  B7: kazandı, 1 deneme, 2 toplam atış [Gülle 2], 9.4 sn, görünürlük %100, 25 px
+  B8: kazandı, 2 deneme, 2 toplam atış [Köz 2], 8.3 sn, görünürlük %100, 31 px
+  B9: kazandı, 1 deneme, 1 toplam atış [Köz 1], 6.5 sn, görünürlük %56, 28 px
+  B10: kazandı, 1 deneme, 2 toplam atış [Gülle 2], 16 sn, görünürlük %96, 22 px

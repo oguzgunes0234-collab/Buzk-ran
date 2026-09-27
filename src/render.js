@@ -1,7 +1,7 @@
 // Rendering only. Nothing here feeds back into the simulation, so visual
 // randomness (particles, shake) is allowed and uses Math.random.
 import * as THREE from 'three';
-import { LAUNCHER, CAGE_SIZE, BALL_RADIUS, levelBounds, arenaOf } from './sim.js';
+import { LAUNCHER, CAGE_SIZE, BALL_RADIUS, AMMO, TOTEM, NEST, levelBounds, arenaOf } from './sim.js';
 
 const COLORS = {
   horizon: 0xd7ebf3,
@@ -123,6 +123,23 @@ export class View {
     this.cageXrayMat = new THREE.LineBasicMaterial({ color: 0x2f8fae, transparent: true, opacity: 0.45, depthTest: false, depthWrite: false });
     this.ballGeo = new THREE.SphereGeometry(BALL_RADIUS, 20, 14);
     this.ballMat = new THREE.MeshLambertMaterial({ color: COLORS.ember, emissive: 0xff4a10, emissiveIntensity: 0.55 });
+    // v4 materials
+    this.stoneBlockMat = new THREE.MeshLambertMaterial({ color: 0x6b7686 });
+    this.stoneBlockEdge = new THREE.LineBasicMaterial({ color: 0x3a4452, transparent: true, opacity: 0.7 });
+    this.iceBlockMat = new THREE.MeshPhongMaterial({ color: 0xc6f0fb, transparent: true, opacity: 0.72, shininess: 110, specular: 0xffffff });
+    this.iceBlockEdge = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
+    this.totemMat = new THREE.MeshLambertMaterial({ color: 0x5b3f8c });
+    this.totemCapMat = new THREE.MeshLambertMaterial({ color: 0x8a6cc4 });
+    this.totemXray = new THREE.LineBasicMaterial({ color: 0x7a55c8, transparent: true, opacity: 0.45, depthTest: false, depthWrite: false });
+    this.nestMat = new THREE.MeshLambertMaterial({ color: 0x8a5a2b });
+    this.eggMat = new THREE.MeshLambertMaterial({ color: 0xfaf6ea });
+    this.nestXray = new THREE.LineBasicMaterial({ color: 0xc98a3a, transparent: true, opacity: 0.5, depthTest: false, depthWrite: false });
+    this.ammoLook = {
+      normal: { geo: this.ballGeo, mat: this.ballMat },
+      heavy: { geo: new THREE.SphereGeometry(AMMO.heavy.radius, 20, 14), mat: new THREE.MeshLambertMaterial({ color: 0x3d4654 }) },
+      ember: { geo: new THREE.SphereGeometry(AMMO.ember.radius, 20, 14), mat: new THREE.MeshLambertMaterial({ color: 0xff3b1f, emissive: 0xff2a00, emissiveIntensity: 1.0 }) },
+    };
+    this.flashes = [];
 
     // aiming preview: dots up to the first predicted contact + a ring at that point
     const N = 48;
@@ -140,6 +157,11 @@ export class View {
     this.impactMarker.add(ring, dot);
     this.impactMarker.visible = false;
     this.scene.add(this.impactMarker);
+    this.blastRing = new THREE.Mesh(new THREE.RingGeometry(0.96, 1.0, 64), new THREE.MeshBasicMaterial({ color: 0xff3b1f, side: THREE.DoubleSide, transparent: true, opacity: 0.8, depthTest: false, depthWrite: false }));
+    this.blastRing.rotation.x = -Math.PI / 2;
+    this.blastRing.renderOrder = 11;
+    this.blastRing.visible = false;
+    this.scene.add(this.blastRing);
     // the ball waiting in the launcher while aiming
     this.loadedBall = new THREE.Mesh(new THREE.SphereGeometry(BALL_RADIUS, 20, 14), new THREE.MeshLambertMaterial({ color: COLORS.ember, emissive: 0xff4a10, emissiveIntensity: 0.55 }));
     this.loadedBall.position.set(0, LAUNCHER.y, LAUNCHER.z);
@@ -190,6 +212,8 @@ export class View {
     this.meshes.clear();
     for (const c of this.critters) this.scene.remove(c.obj);
     this.critters = [];
+    for (const f of this.flashes) this.scene.remove(f.mesh);
+    this.flashes = [];
     for (let i = 0; i < this.pMax; i++) { this.pData[i].life = 0; this.particles.setMatrixAt(i, this._zero); }
     this.particles.instanceMatrix.needsUpdate = true;
   }
@@ -231,8 +255,51 @@ export class View {
       obj = new THREE.Group();
       obj.visible = false;
     } else if (b.kind === 'ball') {
-      obj = new THREE.Mesh(this.ballGeo, this.ballMat);
+      const look = this.ammoLook[b.ammo || 'normal'];
+      obj = new THREE.Mesh(look.geo, look.mat);
       obj.castShadow = true;
+    } else if (b.kind === 'totem') {
+      obj = new THREE.Group();
+      const body = new THREE.Mesh(this.boxGeo, this.totemMat);
+      body.scale.set(TOTEM.w, TOTEM.h, TOTEM.d);
+      body.castShadow = true;
+      const cap = new THREE.Mesh(this.boxGeo, this.totemCapMat);
+      cap.scale.set(TOTEM.w * 1.25, 0.16, TOTEM.d * 1.25);
+      cap.position.y = TOTEM.h / 2 - 0.02;
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x7ff0ff });
+      const e1 = new THREE.Mesh(this.boxGeo, eyeMat), e2 = new THREE.Mesh(this.boxGeo, eyeMat);
+      e1.scale.set(0.1, 0.07, 0.02); e2.scale.copy(e1.scale);
+      e1.position.set(0.1, 0.35, -TOTEM.d / 2 - 0.011); e2.position.set(-0.1, 0.35, -TOTEM.d / 2 - 0.011);
+      const xray = new THREE.LineSegments(this.edgeGeo, this.totemXray);
+      xray.scale.set(TOTEM.w, TOTEM.h, TOTEM.d);
+      xray.renderOrder = 10;
+      obj.add(body, cap, e1, e2, xray);
+      obj.userData.solid = body;
+      obj.userData.eyes = eyeMat;
+      obj.userData.size = [TOTEM.w, TOTEM.h, TOTEM.d];
+    } else if (b.kind === 'nest') {
+      obj = new THREE.Group();
+      const base = new THREE.Mesh(this.boxGeo, this.nestMat);
+      base.scale.set(NEST.w * 0.9, NEST.h * 0.5, NEST.d * 0.9);
+      base.position.y = -NEST.h * 0.25;
+      base.castShadow = true;
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(NEST.w * 0.4, 0.09, 8, 20), this.nestMat);
+      rim.rotation.x = Math.PI / 2;
+      rim.position.y = 0.02;
+      const eggs = new THREE.Group();
+      for (const [ex, ez] of [[0.12, 0.05], [-0.12, 0.06], [0, -0.12]]) {
+        const egg = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 10), this.eggMat);
+        egg.scale.set(1, 1.3, 1);
+        egg.position.set(ex, 0.08, ez);
+        eggs.add(egg);
+      }
+      const xray = new THREE.LineSegments(this.edgeGeo, this.nestXray);
+      xray.scale.set(NEST.w, NEST.h, NEST.d);
+      xray.renderOrder = 10;
+      obj.add(base, rim, eggs, xray);
+      obj.userData.solid = base;
+      obj.userData.eggs = eggs;
+      obj.userData.size = [NEST.w, NEST.h, NEST.d];
     } else if (b.kind === 'cage') {
       obj = new THREE.Group();
       const critter = makeCritter();
@@ -249,16 +316,21 @@ export class View {
       obj.add(shell, edges, xray);
       obj.userData.critter = critter;
       obj.userData.shell = shell;
+      obj.userData.size = [CAGE_SIZE, CAGE_SIZE, CAGE_SIZE];
       shell.castShadow = true;
     } else {
       obj = new THREE.Group();
       const stat = b.kind === 'static';
-      const mesh = new THREE.Mesh(this.boxGeo, stat ? this.stoneMat : this.woodMats[b.id % 3]);
+      const ice = b.kind === 'ice';
+      const stone = b.mat === 'stone';
+      const mat = stat ? this.stoneMat : ice ? this.iceBlockMat : stone ? this.stoneBlockMat : this.woodMats[b.id % 3];
+      const mesh = new THREE.Mesh(this.boxGeo, mat);
       mesh.scale.set(b.size[0], b.size[1], b.size[2]);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      const edges = new THREE.LineSegments(this.edgeGeo, stat ? this.stoneEdgeMat : this.edgeMat);
+      const edges = new THREE.LineSegments(this.edgeGeo, stat ? this.stoneEdgeMat : ice ? this.iceBlockEdge : stone ? this.stoneBlockEdge : this.edgeMat);
       edges.scale.copy(mesh.scale);
+      if (ice) mesh.renderOrder = 1;
       obj.add(mesh, edges);
       obj.userData.solid = mesh;
     }
@@ -335,7 +407,13 @@ export class View {
     this.loadedBall.scale.setScalar(1);
   }
 
-  setLoaded(v) { this.loadedBall.visible = v; }
+  setLoaded(v, type) {
+    this.loadedBall.visible = v;
+    if (type && this.ammoLook[type]) {
+      this.loadedBall.geometry = this.ammoLook[type].geo;
+      this.loadedBall.material = this.ammoLook[type].mat;
+    }
+  }
 
   // First contact of the free-flight path with any solid in the scene or the ground.
   // Returns the path cut at that point plus the contact point and surface normal.
@@ -373,10 +451,11 @@ export class View {
     return null;
   }
 
-  setAim(vel, path) {
+  setAim(vel, path, blastRadius = 0) {
     if (!vel) {
       this.previewDots.visible = this.previewShadows.visible = false;
       this.impactMarker.visible = false;
+      this.blastRing.visible = false;
       return;
     }
     // barrel direction
@@ -410,7 +489,12 @@ export class View {
       this.impactMarker.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), impact.normal);
       this.impactMarker.scale.setScalar(k);
       this.impactMarker.visible = true;
-    } else this.impactMarker.visible = false;
+      if (blastRadius > 0) {
+        this.blastRing.position.set(impact.point.x, impact.point.y + 0.03, impact.point.z);
+        this.blastRing.scale.setScalar(blastRadius);
+        this.blastRing.visible = true;
+      } else this.blastRing.visible = false;
+    } else { this.impactMarker.visible = false; this.blastRing.visible = false; }
   }
 
   spawn(pos, count, color, speed, size, up = 1) {
@@ -456,24 +540,58 @@ export class View {
     this.shake = Math.max(this.shake, 0.02 + f * 0.05);
   }
 
-  setCageIndexMap(map) { this.cageMap = map; }
-  cageBodyIdFor(idx) { return this.cageMap ? this.cageMap[idx] : -1; }
+  setTargetMaps(maps) { this.targetMaps = maps; }
+  cageBodyIdFor(idx) { return this.targetMaps ? this.targetMaps.cages[idx] : -1; }
 
-  // Objective readability metrics for the current camera and screen size.
+  onShatter(ev) {
+    this.removeBody(ev.id);
+    this.spawn(ev.pos, 26, 0xd8f6ff, 5, 0.13, 1.0);
+    this.shake = Math.max(this.shake, 0.06);
+  }
+
+  onExplode(ev) {
+    this.spawn(ev.pos, 48, 0xff7a1f, 9, 0.16, 1.2);
+    this.spawn(ev.pos, 24, 0xffd23f, 7, 0.12, 1.4);
+    this.spawn(ev.pos, 16, 0xffffff, 5, 0.1, 1.2);
+    const flash = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshBasicMaterial({ color: 0xffa040, transparent: true, opacity: 0.55, depthWrite: false }));
+    flash.position.set(ev.pos[0], ev.pos[1], ev.pos[2]);
+    this.scene.add(flash);
+    this.flashes.push({ mesh: flash, t: 0, R: ev.radius });
+    this.shake = Math.max(this.shake, 0.2);
+  }
+
+  onTotem(ev) {
+    const id = this.targetMaps ? this.targetMaps.totems[ev.totem] : -1;
+    const m = this.meshes.get(id);
+    if (m && m.userData.eyes) m.userData.eyes.color.set(0x2a2140);
+    this.spawn(ev.pos, 22, 0xb18cff, 4, 0.1, 1.3);
+  }
+
+  onNest(ev) {
+    const id = this.targetMaps ? this.targetMaps.nests[ev.nest] : -1;
+    const m = this.meshes.get(id);
+    if (m && m.userData.eggs) for (const egg of m.userData.eggs.children) { egg.material = new THREE.MeshLambertMaterial({ color: 0xffd23f }); egg.scale.set(1.2, 0.5, 1.2); }
+    this.spawn(ev.pos, 18, 0xffd23f, 3, 0.09, 1.2);
+    this.shake = Math.max(this.shake, 0.08);
+  }
+
+  // Objective readability metrics for the current camera and screen size,
+  // for every target (cages, totems, nests).
   measureTargets() {
     const out = [];
     const ray = new THREE.Raycaster();
-    const occluders = [];
-    for (const m of this.meshes.values()) if (m.userData.solid && m.visible) occluders.push(m.userData.solid);
     this.scene.updateMatrixWorld(true);
-    this.camera.updateMatrixWorld(true); // camera may have just been re-framed for another mode
+    this.camera.updateMatrixWorld(true);
     for (const [id, m] of this.meshes) {
-      if (m.userData.kind !== 'cage') continue;
+      const kind = m.userData.kind;
+      if (kind !== 'cage' && kind !== 'totem' && kind !== 'nest') continue;
+      const occluders = [];
+      for (const o of this.meshes.values()) if (o !== m && o.userData.solid && o.visible) occluders.push(o.userData.solid);
+      const size = m.userData.size;
       const c = m.position;
       let vis = 0, tot = 0;
-      const h = CAGE_SIZE * 0.42;
       for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) {
-        const pt = new THREE.Vector3(c.x + i * h, c.y + j * h, c.z + k * h);
+        const pt = new THREE.Vector3(c.x + i * size[0] * 0.42, c.y + j * size[1] * 0.42, c.z + k * size[2] * 0.42);
         const dir = pt.clone().sub(this.camera.position);
         const dist = dir.length();
         ray.set(this.camera.position, dir.normalize());
@@ -484,12 +602,12 @@ export class View {
       }
       let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
       for (let i = -1; i <= 1; i += 2) for (let j = -1; j <= 1; j += 2) for (let k = -1; k <= 1; k += 2) {
-        const p = new THREE.Vector3(c.x + i * CAGE_SIZE / 2, c.y + j * CAGE_SIZE / 2, c.z + k * CAGE_SIZE / 2).project(this.camera);
+        const p = new THREE.Vector3(c.x + i * size[0] / 2, c.y + j * size[1] / 2, c.z + k * size[2] / 2).project(this.camera);
         const sx = (p.x * 0.5 + 0.5) * this.viewW;
         const sy = (-p.y * 0.5 + 0.5) * this.viewH;
         x0 = Math.min(x0, sx); x1 = Math.max(x1, sx); y0 = Math.min(y0, sy); y1 = Math.max(y1, sy);
       }
-      out.push({ id, visible: vis / tot, px: Math.min(x1 - x0, y1 - y0) });
+      out.push({ id, kind, visible: vis / tot, px: Math.min(x1 - x0, y1 - y0), sx: (x0 + x1) / 2, sy: (y0 + y1) / 2 });
     }
     return out;
   }
@@ -513,6 +631,15 @@ export class View {
       this.particles.setMatrixAt(i, d.life > 0 ? this._tmpM : this._zero);
     }
     if (any) this.particles.instanceMatrix.needsUpdate = true;
+    for (let i = this.flashes.length - 1; i >= 0; i--) {
+      const f = this.flashes[i];
+      f.t += dt;
+      const u = Math.min(1, f.t / 0.35);
+      f.mesh.scale.setScalar(0.3 + u * f.R);
+      f.mesh.material.opacity = 0.55 * (1 - u);
+      if (u >= 1) { this.scene.remove(f.mesh); f.mesh.geometry.dispose(); f.mesh.material.dispose(); this.flashes.splice(i, 1); }
+    }
+    this.ammoLook.ember.mat.emissiveIntensity = 0.8 + Math.sin(this.time * 9) * 0.3;
     // rescued critters hop and float away
     for (let i = this.critters.length - 1; i >= 0; i--) {
       const c = this.critters[i];

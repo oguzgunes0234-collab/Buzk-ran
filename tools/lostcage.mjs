@@ -1,27 +1,28 @@
-// Checks the reported bug: can a cage end a shot unbroken but off the platform
-// (i.e. lost, unreachable)? Scans every first shot in the bot grid.
-import { initPhysics, Sim, INPUT, arenaOf } from '../src/sim.js';
+// v4 check of the "lost cage" bug: after any first shot (every ammo type in the
+// level, 2-degree grid), no unbroken cage or standing totem may end outside
+// the platform where the player can no longer reach it.
+import { initPhysics, Sim, INPUT, arenaOf, AMMO_ORDER } from '../src/sim.js';
 import { LEVELS } from '../src/levels.js';
 await initPhysics();
-const GRID = { '3d': [20, 20], '25d': [20, 6] };
+const lim = INPUT['3d'];
+let total = 0, totalLost = 0;
 for (const lv of LEVELS) {
   const ar = arenaOf(lv);
-  for (const mode of ['3d', '25d']) {
-    const lim = INPUT[mode];
-    let shots = 0, fell = 0, lost = 0;
-    for (let a = lim.a.min; a <= lim.a.max; a += GRID[mode][0]) for (let b = lim.b.min; b <= lim.b.max; b += GRID[mode][1]) {
-      const sim = new Sim(lv, mode, { fx: false });
-      sim.fire(a, b);
-      while (sim.tick()) { for (const f of sim.pendingFx) if (f.type === 'break' && f.fell) fell++; sim.pendingFx.length = 0; }
-      for (const f of sim.pendingFx) if (f.type === 'break' && f.fell) fell++;
-      for (const c of sim.cages) {
-        if (c.broken || !c.alive) continue;
-        const t = c.body.translation();
-        if (Math.abs(t.x) > ar.xHalf || t.z > ar.zMax || t.z < ar.zMin || t.y < -0.1) lost++;
-      }
-      shots++;
-      sim.free();
-    }
-    console.log('B' + lv.id, mode.padEnd(3), 'atis', shots, '| kenardan dusup kirilan kafes', fell, '| kirilmadan platform disinda kalan kafes', lost);
+  const types = AMMO_ORDER.filter((t) => lv.ammo.includes(t));
+  let shots = 0, fell = 0, lost = 0, lostTotem = 0;
+  for (const type of types) for (let a = lim.a.min; a <= lim.a.max; a += 20) for (let b = lim.b.min; b <= lim.b.max; b += 20) {
+    const sim = new Sim(lv, '3d', { fx: false });
+    sim.fire(a, b, type);
+    const count = () => { for (const f of sim.pendingFx) if (f.type === 'break' && f.fell) fell++; sim.pendingFx.length = 0; };
+    while (sim.tick()) count();
+    count();
+    const off = (t) => Math.abs(t.x) > ar.xHalf || t.z > ar.zMax || t.z < ar.zMin;
+    for (const c of sim.cages) if (c.alive && !c.broken && off(c.body.translation())) lost++;
+    for (const t of sim.totems) if (t.alive && !t.down && off(t.body.translation())) lostTotem++;
+    shots++;
+    sim.free();
   }
+  total += shots; totalLost += lost + lostTotem;
+  console.log('B' + lv.id, 'atis', shots, '| kenardan dusup kirilan kafes', fell, '| kirilmadan disarida kalan kafes', lost, '| ayakta disarida totem', lostTotem);
 }
+console.log('TOPLAM atis', total, 'kayip hedef', totalLost);

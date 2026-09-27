@@ -1,6 +1,6 @@
-// End-to-end browser check: plays the whole evaluation tour through the real
-// UI flow (numeric shots injected via test hooks), runs the in-page
-// consistency self-test in Chromium, and collects readability metrics.
+// End-to-end browser check (v4): plays the 10-level tour through the real UI
+// flow (numeric shots injected via test hooks), exercises the lose/retry and
+// nest-failure paths, runs the in-page self-test, collects the summary.
 import { chromium } from 'playwright-core';
 import path from 'node:path';
 import { writeFileSync } from 'node:fs';
@@ -14,49 +14,47 @@ page.on('console', (m) => { if ((m.type() === 'error' || m.type() === 'warning')
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 await page.goto('file://' + path.resolve('dist/test.html'));
 await page.waitForFunction(() => !document.getElementById('scrStart').hidden, null, { timeout: 30000 });
-
-// 1) in-page self-test (Chromium / V8) against Node reference
 const st = await page.evaluate(() => window.__buzkiran.runSelfTest());
 console.log('self-test in Chromium:', st.passed + '/' + st.total, st.results.filter((r) => !r.ok).map((r) => r.name + ': ' + r.mismatch).join('; '));
 
-// 2) play the tour through the UI
-await page.click('#btnTour');
-const winShots = (lv, mode) => REFERENCE.cases.find((c) => c.level === lv && c.mode === mode && c.name.endsWith('kazanan')).shots;
-let lostOnce = false;
-for (let i = 0; i < 16; i++) {
-  const it = await page.evaluate(() => { const t = window.__buzkiran.state.tour; return t.order[t.idx]; });
-  // exercise the lose -> retry path once (level 2 has 2 shots)
-  if (!lostOnce && it.level === 2) {
-    const miss = it.mode === '3d' ? { a: -150, b: 700 } : { a: 800, b: 25 };
-    for (let k = 0; k < 2; k++) {
-      await page.waitForFunction(() => window.__buzkiran.state.sim.phase === 'aim');
-      await page.evaluate(([a, b]) => window.__buzkiran.fire(a, b), [miss.a, miss.b]);
-    }
-    await page.waitForFunction(() => window.__buzkiran.state.screen === 'scrResult', null, { timeout: 60000 });
-    const title = await page.textContent('#resTitle');
-    if (i === 2 || i === 3) await page.screenshot({ path: 'out/10-lost.png' });
-    await page.click('#resRetry');
-    lostOnce = title.includes('bitti');
-  }
-  for (const s of winShots(it.level, it.mode)) {
+const fireSeq = async (shots) => {
+  for (const s of shots) {
     await page.waitForFunction(() => window.__buzkiran.state.sim.phase === 'aim', null, { timeout: 60000 });
-    await page.evaluate(([a, b]) => window.__buzkiran.fire(a, b), [s.a, s.b]);
+    await page.evaluate(([a, b, t]) => { const k = window.__buzkiran; k.selectAmmo(t); k.fire(a, b); }, [s.a, s.b, s.t]);
   }
   await page.waitForFunction(() => window.__buzkiran.state.screen === 'scrResult', null, { timeout: 60000 });
-  if (i === 15) await page.screenshot({ path: 'out/11-won.png' });
+  return page.textContent('#resTitle');
+};
+await page.click('#btnTour');
+const paths = [];
+for (let i = 0; i < 10; i++) {
+  const lv = await page.evaluate(() => { const t = window.__buzkiran.state.tour; return t.order[t.idx]; });
+  if (lv === 2) { // lose -> retry
+    const title = await fireSeq([{ t: 'normal', a: -150, b: 700 }, { t: 'normal', a: -150, b: 700 }]);
+    paths.push('B2 kayıp: ' + title);
+    await page.click('#resRetry');
+  }
+  if (lv === 8) { // nest failure -> retry
+    const c = REFERENCE.cases.find((x) => x.name === 'B8 yuva kırılır');
+    const title = await fireSeq(c.shots);
+    paths.push('B8 yuva: ' + title + ' / ' + (await page.textContent('#resBody')));
+    await page.screenshot({ path: 'out/v4-nestfail.png' });
+    await page.click('#resRetry');
+  }
+  const win = REFERENCE.cases.find((x) => x.name === 'B' + lv + ' kazanan');
+  const title = await fireSeq(win.shots);
+  if (!title.includes('Başardın')) paths.push('B' + lv + ' BEKLENMEYEN SONUÇ: ' + title);
+  if (lv === 6) await page.screenshot({ path: 'out/v4-won.png' });
   await page.click('#resNext');
 }
 await page.waitForFunction(() => !document.getElementById('scrRate').hidden);
-await page.waitForFunction(() => document.getElementById('selftestStatus').textContent.includes('/18'), null, { timeout: 60000 });
-// give a couple of example ratings to check the form wiring (not real answers)
-await page.click('#r-okunabilirlik-3d-3');
-await page.click('#r-okunabilirlik-25d-4');
-await page.screenshot({ path: 'out/12-rate.png', fullPage: true });
+await page.waitForFunction(() => document.getElementById('selftestStatus').textContent.includes('/' + 12), null, { timeout: 60000 });
+await page.click('#r-okunabilirlik-4');
+await page.click('#r-mermi-5');
+await page.screenshot({ path: 'out/v4-rate.png', fullPage: true });
 const summary = await page.inputValue('#summaryText');
-const log = await page.evaluate(() => window.__buzkiran.state.log);
 writeFileSync('out/e2e-summary.txt', summary);
-writeFileSync('out/e2e-log.json', JSON.stringify(log, null, 2));
-console.log('lost->retry path exercised:', lostOnce);
+console.log(paths.join('\n'));
 console.log(summary);
 console.log(errors.length ? 'CONSOLE:\n' + errors.join('\n') : 'no console errors');
 await browser.close();

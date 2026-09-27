@@ -1,0 +1,539 @@
+{
+  "generated": "2026-09-26T21:56:13.062Z",
+  "mode": "3d",
+  "params": {
+    "cageDensity": 1.2,
+    "cageFriction": 1,
+    "groundFriction": 1,
+    "cageBreakForce": 90,
+    "nestBreakForce": 60,
+    "fxImpactForce": 25
+  },
+  "materials": {
+    "wood": {
+      "density": 1,
+      "friction": 1,
+      "restitution": 0.05
+    },
+    "stone": {
+      "density": 3.2,
+      "friction": 1,
+      "restitution": 0.02
+    },
+    "ice": {
+      "density": 0.9,
+      "friction": 0.7,
+      "restitution": 0.05,
+      "breakForce": 55
+    }
+  },
+  "ammo": {
+    "normal": {
+      "name": "Gülle",
+      "radius": 0.3,
+      "density": 9,
+      "speedK": 1,
+      "restitution": 0.15
+    },
+    "heavy": {
+      "name": "Ağır",
+      "radius": 0.38,
+      "density": 20,
+      "speedK": 0.85,
+      "restitution": 0.05
+    },
+    "ember": {
+      "name": "Köz",
+      "radius": 0.3,
+      "density": 6,
+      "speedK": 1,
+      "restitution": 0.1,
+      "blast": {
+        "radius": 2.2,
+        "core": 1.1,
+        "impulse": 7
+      }
+    }
+  },
+  "method": {
+    "note": "Oran yalnizca taranan sinirlar ve adim buyuklugu icindeki atislari kapsar. Oyuncunun cozumu bulacagini veya bolumun eglenceli oldugunu gostermez. Adimlar arasinda kalan dar cozumler bulunamayabilir.",
+    "bounds": {
+      "yaw": [
+        -15,
+        15
+      ],
+      "pitch": [
+        5,
+        70
+      ]
+    },
+    "grid": {
+      "aStep": 10,
+      "bStep": 10
+    },
+    "followup": {
+      "aStep": 20,
+      "bStep": 20
+    },
+    "beam": 4
+  },
+  "levels": [
+    {
+      "level": 1,
+      "name": "İlk atış",
+      "ammo": [
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 57,
+          "winRatio": 0.02785923753665689,
+          "largestRegionCells": 38,
+          "robustWinCells": 23,
+          "sample": {
+            "a": 0,
+            "b": 230,
+            "robust": true
+          },
+          "nestBrokenCells": 0,
+          "maxProgress": 1
+        }
+      },
+      "solution": {
+        "shots": 1,
+        "sequence": [
+          {
+            "t": "normal",
+            "a": 0,
+            "b": 230
+          }
+        ],
+        "robust": true
+      },
+      "seconds": 3.056
+    },
+    {
+      "level": 2,
+      "name": "Devrilen kule",
+      "ammo": [
+        "normal",
+        "normal"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 148,
+          "winRatio": 0.07233626588465299,
+          "largestRegionCells": 126,
+          "robustWinCells": 82,
+          "sample": {
+            "a": 0,
+            "b": 210,
+            "robust": true
+          },
+          "nestBrokenCells": 0,
+          "maxProgress": 1
+        }
+      },
+      "solution": {
+        "shots": 1,
+        "sequence": [
+          {
+            "t": "normal",
+            "a": 0,
+            "b": 210
+          }
+        ],
+        "robust": true
+      },
+      "seconds": 2.113
+    },
+    {
+      "level": 3,
+      "name": "Sağ ve sol",
+      "ammo": [
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 0,
+          "winRatio": 0,
+          "largestRegionCells": 0,
+          "robustWinCells": 0,
+          "sample": null,
+          "nestBrokenCells": 0,
+          "maxProgress": 1
+        }
+      },
+      "solution": {
+        "shots": 2,
+        "sequence": [
+          {
+            "t": "normal",
+            "a": -110,
+            "b": 210
+          },
+          {
+            "t": "normal",
+            "a": 70,
+            "b": 290
+          }
+        ],
+        "robust": true,
+        "lastShotWinRatio": 0.030303030303030304
+      },
+      "seconds": 3.09
+    },
+    {
+      "level": 4,
+      "name": "Kırılgan buz",
+      "ammo": [
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 60,
+          "winRatio": 0.02932551319648094,
+          "largestRegionCells": 35,
+          "robustWinCells": 18,
+          "sample": {
+            "a": 0,
+            "b": 250,
+            "robust": true
+          },
+          "nestBrokenCells": 0,
+          "maxProgress": 1
+        }
+      },
+      "solution": {
+        "shots": 1,
+        "sequence": [
+          {
+            "t": "normal",
+            "a": 0,
+            "b": 250
+          }
+        ],
+        "robust": true
+      },
+      "seconds": 2.521
+    },
+    {
+      "level": 5,
+      "name": "Ağır gülle",
+      "ammo": [
+        "heavy",
+        "normal"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 55,
+          "winRatio": 0.026881720430107527,
+          "largestRegionCells": 30,
+          "robustWinCells": 21,
+          "sample": {
+            "a": 0,
+            "b": 240,
+            "robust": true
+          },
+          "nestBrokenCells": 0,
+          "maxProgress": 1
+        },
+        "heavy": {
+          "cells": 2046,
+          "winCells": 196,
+          "winRatio": 0.09579667644183773,
+          "largestRegionCells": 178,
+          "robustWinCells": 118,
+          "sample": {
+            "a": 0,
+            "b": 460,
+            "robust": true
+          },
+          "nestBrokenCells": 0,
+          "maxProgress": 1
+        }
+      },
+      "solution": {
+        "shots": 1,
+        "sequence": [
+          {
+            "t": "heavy",
+            "a": 0,
+            "b": 460
+          }
+        ],
+        "robust": true
+      },
+      "seconds": 4.736
+    },
+    {
+      "level": 6,
+      "name": "Köz",
+      "ammo": [
+        "ember",
+        "normal",
+        "normal"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 0,
+          "winRatio": 0,
+          "largestRegionCells": 0,
+          "robustWinCells": 0,
+          "sample": null,
+          "nestBrokenCells": 0,
+          "maxProgress": 2
+        },
+        "ember": {
+          "cells": 2046,
+          "winCells": 41,
+          "winRatio": 0.020039100684261974,
+          "largestRegionCells": 28,
+          "robustWinCells": 12,
+          "sample": {
+            "a": 0,
+            "b": 240,
+            "robust": true
+          },
+          "nestBrokenCells": 0,
+          "maxProgress": 3
+        }
+      },
+      "solution": {
+        "shots": 1,
+        "sequence": [
+          {
+            "t": "ember",
+            "a": 0,
+            "b": 240
+          }
+        ],
+        "robust": true
+      },
+      "seconds": 3.86
+    },
+    {
+      "level": 7,
+      "name": "Totemler",
+      "ammo": [
+        "normal",
+        "normal",
+        "normal"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 0,
+          "winRatio": 0,
+          "largestRegionCells": 0,
+          "robustWinCells": 0,
+          "sample": null,
+          "nestBrokenCells": 0,
+          "maxProgress": 1
+        }
+      },
+      "solution": {
+        "shots": 2,
+        "sequence": [
+          {
+            "t": "normal",
+            "a": -80,
+            "b": 230
+          },
+          {
+            "t": "normal",
+            "a": 50,
+            "b": 250
+          }
+        ],
+        "robust": false,
+        "lastShotWinRatio": 0.020833333333333332
+      },
+      "seconds": 3.285
+    },
+    {
+      "level": 8,
+      "name": "Yuvayı koru",
+      "ammo": [
+        "normal",
+        "normal",
+        "ember"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 53,
+          "winRatio": 0.025904203323558164,
+          "largestRegionCells": 33,
+          "robustWinCells": 21,
+          "sample": {
+            "a": 0,
+            "b": 290,
+            "robust": true
+          },
+          "nestBrokenCells": 91,
+          "maxProgress": 1
+        },
+        "ember": {
+          "cells": 2046,
+          "winCells": 96,
+          "winRatio": 0.0469208211143695,
+          "largestRegionCells": 61,
+          "robustWinCells": 35,
+          "sample": {
+            "a": 0,
+            "b": 270,
+            "robust": true
+          },
+          "nestBrokenCells": 144,
+          "maxProgress": 1
+        }
+      },
+      "solution": {
+        "shots": 1,
+        "sequence": [
+          {
+            "t": "ember",
+            "a": 0,
+            "b": 270
+          }
+        ],
+        "robust": true
+      },
+      "seconds": 3.781
+    },
+    {
+      "level": 9,
+      "name": "Karışık",
+      "ammo": [
+        "normal",
+        "heavy",
+        "ember"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 0,
+          "winRatio": 0,
+          "largestRegionCells": 0,
+          "robustWinCells": 0,
+          "sample": null,
+          "nestBrokenCells": 0,
+          "maxProgress": 2
+        },
+        "heavy": {
+          "cells": 2046,
+          "winCells": 2,
+          "winRatio": 0.0009775171065493646,
+          "largestRegionCells": 2,
+          "robustWinCells": 0,
+          "sample": {
+            "a": -40,
+            "b": 490,
+            "robust": false
+          },
+          "nestBrokenCells": 0,
+          "maxProgress": 3
+        },
+        "ember": {
+          "cells": 2046,
+          "winCells": 50,
+          "winRatio": 0.024437927663734114,
+          "largestRegionCells": 11,
+          "robustWinCells": 2,
+          "sample": {
+            "a": 50,
+            "b": 660,
+            "robust": true
+          },
+          "nestBrokenCells": 0,
+          "maxProgress": 3
+        }
+      },
+      "solution": {
+        "shots": 1,
+        "sequence": [
+          {
+            "t": "ember",
+            "a": 50,
+            "b": 660
+          }
+        ],
+        "robust": true
+      },
+      "seconds": 13.149
+    },
+    {
+      "level": 10,
+      "name": "Büyük kale",
+      "ammo": [
+        "normal",
+        "normal",
+        "heavy",
+        "ember"
+      ],
+      "oneShot": {
+        "normal": {
+          "cells": 2046,
+          "winCells": 0,
+          "winRatio": 0,
+          "largestRegionCells": 0,
+          "robustWinCells": 0,
+          "sample": null,
+          "nestBrokenCells": 84,
+          "maxProgress": 3
+        },
+        "heavy": {
+          "cells": 2046,
+          "winCells": 0,
+          "winRatio": 0,
+          "largestRegionCells": 0,
+          "robustWinCells": 0,
+          "sample": null,
+          "nestBrokenCells": 197,
+          "maxProgress": 2
+        },
+        "ember": {
+          "cells": 2046,
+          "winCells": 0,
+          "winRatio": 0,
+          "largestRegionCells": 0,
+          "robustWinCells": 0,
+          "sample": null,
+          "nestBrokenCells": 132,
+          "maxProgress": 3
+        }
+      },
+      "solution": {
+        "shots": 2,
+        "sequence": [
+          {
+            "t": "normal",
+            "a": -40,
+            "b": 270
+          },
+          {
+            "t": "normal",
+            "a": 70,
+            "b": 250
+          }
+        ],
+        "robust": true,
+        "lastShotWinRatio": 0.06818181818181818
+      },
+      "seconds": 18.925
+    }
+  ]
+}

@@ -50,10 +50,10 @@ export class Sfx {
     o.stop(t + dur + 0.05);
   }
 
-  fire() {
+  fire(type) {
     if (!this._ok()) return;
     const t = this.ctx.currentTime;
-    this._tone(t, 110, 0.25, 'sine', 0.7, 45);
+    this._tone(t, type === 'heavy' ? 80 : 110, 0.25, 'sine', 0.7, type === 'heavy' ? 35 : 45);
     const f = this._noise(t, 0.35, 'bandpass', 900, 0.8, 0.35);
     f.frequency.exponentialRampToValueAtTime(300, t + 0.35);
   }
@@ -71,11 +71,32 @@ export class Sfx {
     }
   }
 
-  shatter() {
+  shatter(vol = 1) {
     if (!this._ok()) return;
     const t = this.ctx.currentTime;
-    this._noise(t, 0.45, 'highpass', 2500, 0.7, 0.55);
-    for (let i = 0; i < 6; i++) this._tone(t + i * 0.025, 1800 + Math.random() * 2400, 0.25, 'sine', 0.06, null);
+    this._noise(t, 0.45, 'highpass', 2500, 0.7, 0.55 * vol);
+    for (let i = 0; i < 6; i++) this._tone(t + i * 0.025, 1800 + Math.random() * 2400, 0.25, 'sine', 0.06 * vol, null);
+  }
+
+  explode() {
+    if (!this._ok()) return;
+    const t = this.ctx.currentTime;
+    this._noise(t, 0.9, 'lowpass', 700, 0.6, 0.9);
+    this._tone(t, 70, 0.6, 'sine', 0.8, 30);
+    this._noise(t + 0.03, 0.4, 'bandpass', 1800, 0.8, 0.25);
+  }
+
+  totem() {
+    if (!this._ok()) return;
+    const t = this.ctx.currentTime + 0.05;
+    [659, 523, 392].forEach((f, i) => this._tone(t + i * 0.07, f, 0.2, 'square', 0.05, null));
+  }
+
+  crack() {
+    if (!this._ok()) return;
+    const t = this.ctx.currentTime;
+    this._noise(t, 0.2, 'bandpass', 1200, 2, 0.4);
+    [330, 247].forEach((f, i) => this._tone(t + 0.1 + i * 0.16, f, 0.28, 'sawtooth', 0.07, null));
   }
 
   rescue() {

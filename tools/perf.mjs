@@ -8,13 +8,13 @@ const page = await ctx.newPage();
 await page.goto('file://' + path.resolve('dist/test.html'));
 await page.waitForFunction(() => !document.getElementById('scrStart').hidden, null, { timeout: 30000 });
 const cdp = await ctx.newCDPSession(page);
-const cases = REFERENCE.cases.filter((c) => c.level === 8);
+const cases = REFERENCE.cases.filter((c) => c.level >= 8);
 for (const rate of [1, 4, 6]) {
   await cdp.send('Emulation.setCPUThrottlingRate', { rate });
   for (const c of cases) {
     // warm-up once, then measure
-    await page.evaluate(([l, m, s]) => window.__buzkiran.bench(l, m, s), [c.level, c.mode, c.shots]);
-    const r = await page.evaluate(([l, m, s]) => window.__buzkiran.bench(l, m, s), [c.level, c.mode, c.shots]);
+    await page.evaluate(([l, s]) => window.__buzkiran.bench(l, s), [c.level, c.shots]);
+    const r = await page.evaluate(([l, s]) => window.__buzkiran.bench(l, s), [c.level, c.shots]);
     console.log('CPU x' + rate, c.name.padEnd(24), 'kurulum+yerlesme ms', r.build, '| adim', r.steps, 'ort ms', r.avg, 'p95', r.p95, 'max', r.max);
   }
 }
