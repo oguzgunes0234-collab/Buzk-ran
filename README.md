@@ -111,13 +111,13 @@ tamamen ortadan kaldırıyor. v3'teki 2.5D modda blokların kaygan olmasının n
 
 ## Sürüm geçmişi
 
-| Etiket | İçerik |
-|---|---|
-| `v3` | 8 bölüm; 3D (arkadan) ve 2.5D (yandan) kamerayı karşılaştıran sürüm |
-| `v4` | Yalnızca 3D kamera, 10 bölüm, 3 mermi (Gülle, Ağır, Köz), taş ve buz, totem ve yuva hedefleri |
-| `v4.1` | B9 ve B10 yeniden kuruldu, taş totem eklendi, kaybedince ipucu gösteriliyor |
+| Sürüm | Commit | İçerik |
+|---|---|---|
+| v3 | `b14e03d` | 8 bölüm; 3D (arkadan) ve 2.5D (yandan) kamerayı karşılaştıran sürüm |
+| v4 | `f274f53` | Yalnızca 3D kamera, 10 bölüm, 3 mermi (Gülle, Ağır, Köz), taş ve buz, totem ve yuva hedefleri |
+| v4.1 | `9b2418b` | B9 ve B10 yeniden kuruldu, taş totem eklendi, kaybedince ipucu gösteriliyor |
 
-Eski bir sürüme bakmak için örneğin `git checkout v3` komutunu kullanabilirsin.
+Eski bir sürüme bakmak için commit numarasını kullanabilirsin; örneğin 2.5D karşılaştırması için `git checkout b14e03d`.
 
 ## Bilinen riskler
 
