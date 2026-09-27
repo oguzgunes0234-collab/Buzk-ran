@@ -1,0 +1,236 @@
+<title>Buzkıran Vadisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+  :root {
+    --ink: #1b2a41;
+    --ink-soft: #4d5f78;
+    --snow: #f4f9fc;
+    --frost: rgba(244, 249, 252, 0.9);
+    --sky-top: #bcdcec;
+    --sky-low: #e3f1f7;
+    --ice: #7fd3ea;
+    --ice-deep: #2f8fae;
+    --ember: #ff7a3d;
+    --ember-deep: #d9541a;
+    --line: rgba(27, 42, 65, 0.14);
+    --display: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+    --body: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color-scheme: light;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+  body {
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-low) 58%, #eef5f9 100%);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 15px;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app { position: fixed; inset: 0; }
+  #view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+  #dragLayer { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+  /* HUD */
+  #hud {
+    position: absolute; left: 0; right: 0; top: 0;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 0;
+    display: grid; gap: 8px; pointer-events: none;
+  }
+  .hud-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .hud-row.top { display: grid; grid-template-columns: 1fr auto; align-items: start; }
+  #lvlName { font-family: var(--display); font-weight: 800; font-size: 19px; line-height: 1.1; letter-spacing: 0.01em; text-shadow: 0 1px 0 rgba(255,255,255,0.6); }
+  #tourBar { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+  #modeChip {
+    font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 999px;
+    background: var(--ink); color: var(--snow); letter-spacing: 0.02em;
+  }
+  #modeChip[data-mode="25d"] { background: var(--ice-deep); }
+  #shots { display: flex; gap: 5px; }
+  .pip { width: 14px; height: 14px; border-radius: 50%; background: var(--ember); box-shadow: inset 0 -2px 0 var(--ember-deep); }
+  .pip.used { background: transparent; box-shadow: inset 0 0 0 2px rgba(27,42,65,0.3); }
+  #cages { font-size: 13px; font-weight: 800; padding: 3px 9px; border-radius: 8px; background: rgba(127, 211, 234, 0.35); color: var(--ink); }
+  .hud-buttons { display: flex; gap: 6px; pointer-events: auto; }
+  .hud-btn {
+    font: 800 13px var(--body); color: var(--ink); background: var(--frost);
+    border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; min-height: 38px; min-width: 40px;
+  }
+  .hud-btn:focus-visible, .btn:focus-visible, .rate-scale button:focus-visible { outline: 3px solid var(--ember); outline-offset: 2px; }
+
+  #hint {
+    position: absolute; left: 0; right: 0; bottom: 0; pointer-events: none;
+    padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    display: grid; gap: 6px; justify-items: center;
+  }
+  #aimReadout { justify-self: start; font: 800 14px var(--body); font-variant-numeric: tabular-nums; color: var(--ink); background: rgba(244, 249, 252, 0.8); padding: 3px 10px; border-radius: 8px; min-height: 1.2em; }
+  #aimReadout:empty { visibility: hidden; }
+  #hintText { justify-self: start; max-width: 34em; font-size: 12.5px; line-height: 1.35; color: var(--ink-soft); background: rgba(244, 249, 252, 0.78); padding: 5px 10px; border-radius: 9px; }
+
+  /* screens */
+  .screen {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    padding-inline: 16px; padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-bottom, 0px));
+    background: rgba(214, 234, 243, 0.55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    overflow-y: auto;
+  }
+  .card {
+    width: 100%; max-width: 440px; background: var(--snow); border-radius: 18px;
+    box-shadow: 0 18px 40px rgba(27, 42, 65, 0.18); padding: 22px 20px; display: grid; gap: 14px;
+  }
+  .eyebrow { font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ice-deep); }
+  h1, h2 { font-family: var(--display); margin: 0; line-height: 1.05; text-wrap: balance; }
+  h1 { font-size: 40px; font-weight: 800; }
+  h2 { font-size: 28px; font-weight: 800; }
+  p { margin: 0; line-height: 1.5; }
+  .muted { color: var(--ink-soft); font-size: 13px; }
+  .controls-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ctl { border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: grid; gap: 4px; }
+  .ctl b { font-size: 13px; }
+  .ctl span { font-size: 12.5px; line-height: 1.35; color: var(--ink-soft); }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn {
+    font: 800 16px var(--body); border-radius: 12px; padding: 12px 16px; min-height: 48px;
+    border: 0; background: var(--ember); color: #fff; box-shadow: inset 0 -3px 0 var(--ember-deep);
+    flex: 1 1 auto; cursor: pointer;
+  }
+  .btn.secondary { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 2px var(--line); }
+  .btn.small { font-size: 14px; min-height: 40px; padding: 8px 12px; flex: 0 0 auto; }
+  .btn.small.done { background: var(--ice); color: var(--ink); box-shadow: inset 0 -3px 0 var(--ice-deep); }
+
+  #levelGrid { display: grid; gap: 8px; }
+  .lvl-row { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 8px; align-items: center; }
+  .lvl-no { font-family: var(--display); font-weight: 800; font-size: 20px; color: var(--ice-deep); text-align: center; }
+  .lvl-name { font-weight: 700; }
+
+  #rateForm { display: grid; gap: 12px; }
+  .rate-row { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+  .rate-label { display: grid; gap: 2px; }
+  .rate-label span { font-size: 12.5px; color: var(--ink-soft); }
+  .rate-scale { display: grid; grid-template-columns: 40px repeat(5, 1fr); gap: 6px; align-items: center; }
+  .rate-scale em { font-style: normal; font-size: 12px; font-weight: 800; color: var(--ink-soft); }
+  .rate-scale button {
+    font: 800 15px var(--body); min-height: 38px; border-radius: 10px; border: 0;
+    background: #e6eef3; color: var(--ink); cursor: pointer; font-variant-numeric: tabular-nums;
+  }
+  .rate-scale button.on { background: var(--ink); color: var(--snow); }
+  #summaryText {
+    width: 100%; box-sizing: border-box; min-height: 180px; font: 12px/1.45 ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: #fff; color: var(--ink); resize: vertical;
+    -webkit-user-select: text; user-select: text;
+  }
+  #selftestStatus { font-weight: 700; font-size: 13px; }
+  .note { font-size: 12px; color: var(--ink-soft); line-height: 1.45; border-left: 3px solid var(--ice); padding-left: 10px; }
+  @media (prefers-reduced-motion: reduce) { .screen { backdrop-filter: none; -webkit-backdrop-filter: none; } }
+</style>
+
+<div id="app">
+  <canvas id="view" aria-label="Oyun sahnesi"></canvas>
+  <svg id="dragLayer" aria-hidden="true"></svg>
+
+  <div id="hud" hidden>
+    <div class="hud-row top">
+      <div>
+        <div id="tourBar">Tur</div>
+        <div id="lvlName">Bölüm</div>
+      </div>
+      <div class="hud-buttons">
+        <button class="hud-btn" id="btnRestart" type="button" aria-label="Bölümü baştan başlat">↻</button>
+        <button class="hud-btn" id="btnMenu" type="button">Menü</button>
+      </div>
+    </div>
+    <div class="hud-row">
+      <span id="modeChip">3D arkadan</span>
+      <span id="shots" aria-label="Kalan atış"></span>
+      <span id="cages">Kafes</span>
+      <span class="hud-buttons"><button class="hud-btn" id="btnMode" type="button" hidden>2,5D dene</button></span>
+    </div>
+    <div id="hintText"></div>
+    <div id="aimReadout"></div>
+  </div>
+
+  <div id="hint" hidden></div>
+
+  <section class="screen" id="scrLoading">
+    <div class="card"><p class="eyebrow">Buzkıran Vadisi</p><p>Fizik motoru yükleniyor…</p></div>
+  </section>
+
+  <section class="screen" id="scrStart" hidden>
+    <div class="card">
+      <p class="eyebrow">Gri kutu prototip · v3</p>
+      <h1>Buzkıran Vadisi</h1>
+      <p>Buza hapsolmuş yavruları kafeslerini kırarak kurtar. Bu sürüm yalnızca oyun hissini ve kamera okunabilirliğini denemek için; grafikler, sesler ve bölümler geçicidir.</p>
+      <div class="controls-compare">
+        <div class="ctl"><b>3D arkadan</b><span>Kontrol: yön ve yükseklik. Basılı tutup sürükle, bırakınca atar.</span></div>
+        <div class="ctl"><b>2,5D yandan</b><span>Kontrol: açı ve güç. Sapan gibi geri çek, bırakınca atar.</span></div>
+      </div>
+      <p class="muted">İki modda da noktalı çizgi topun ilk çarpacağı yere kadar gider; turuncu halka o noktayı gösterir. Buz platformun kenarından düşen kafes de kırılır.</p>
+      <p class="muted">Değerlendirme turu 8 bölümü iki kamerayla oynatır (16 kısa tur). Her bölümü bir kamerayla ilk kez oynarsın; ikinci oynayışta düzeni tanırsın. Bu yüzden sıra her bölümde değişir.</p>
+      <div class="btn-row">
+        <button class="btn" id="btnTour" type="button">Değerlendirme turunu başlat</button>
+        <button class="btn secondary" id="btnFree" type="button">Serbest oyna</button>
+      </div>
+      <p class="note">Ses için telefonun sessiz modunu kapat. Titreşim yalnızca Android tarayıcılarda çalışır.</p>
+    </div>
+  </section>
+
+  <section class="screen" id="scrLevels" hidden>
+    <div class="card">
+      <p class="eyebrow">Serbest oyun</p>
+      <h2>Bölümler</h2>
+      <div id="levelGrid"></div>
+      <div class="btn-row"><button class="btn secondary" id="btnLevelsBack" type="button">Geri</button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scrMenu" hidden>
+    <div class="card">
+      <p class="eyebrow">Menü</p>
+      <div class="btn-row"><button class="btn" id="menuResume" type="button">Oyuna dön</button></div>
+      <div class="btn-row">
+        <button class="btn secondary" id="menuRate" type="button">Özet ve değerlendirme</button>
+        <button class="btn secondary" id="menuLevels" type="button">Serbest oyun</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn secondary" id="btnMute" type="button" aria-pressed="false">Ses açık</button>
+        <button class="btn secondary" id="menuStart" type="button">Başlangıç</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scrResult" hidden>
+    <div class="card">
+      <h2 id="resTitle">Kurtarıldı!</h2>
+      <p id="resBody"></p>
+      <div class="btn-row">
+        <button class="btn" id="resNext" type="button">Sıradaki</button>
+        <button class="btn" id="resRetry" type="button">Tekrar dene</button>
+        <button class="btn secondary" id="resSkip" type="button">Geç</button>
+        <button class="btn secondary" id="resReplay" type="button">Tekrar oyna</button>
+        <button class="btn secondary" id="resLevels" type="button">Bölümler</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scrRate" hidden>
+    <div class="card">
+      <p class="eyebrow">Toplu değerlendirme</p>
+      <h2>Her ölçütü ayrı puanla</h2>
+      <p class="note">Kontrol biçimleri farklı: 3D'de yön/yükseklik, 2,5D'de açı/güç. Aynı bölüm düzeni kullanılsa da bu puanlar "hangisi daha iyi oyun" sorusunun cevabı değil; her ölçütü ayrı değerlendir. 1 = hiç katılmıyorum, 5 = tamamen katılıyorum.</p>
+      <div id="rateForm"></div>
+      <p id="selftestStatus">Tutarlılık testi bekliyor.</p>
+      <label for="summaryText" class="muted">Özet (bunu kopyalayıp bana gönderebilirsin):</label>
+      <textarea id="summaryText" readonly></textarea>
+      <div class="btn-row">
+        <button class="btn" id="btnCopy" type="button">Özeti kopyala</button>
+        <button class="btn secondary" id="rateBack" type="button">Geri</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scrError" hidden>
+    <div class="card"><h2>Başlatılamadı</h2><p id="errText"></p></div>
+  </section>
+</div>
+<script src="game.js"></script>

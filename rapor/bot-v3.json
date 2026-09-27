@@ -1,0 +1,968 @@
+{
+  "generated": "2026-09-26T13:19:54.560Z",
+  "params": {
+    "woodDensity": 1,
+    "ballDensity": 9,
+    "cageDensity": 1.2,
+    "woodFriction": 1,
+    "woodRestitution": 0.05,
+    "ballRestitution": 0.15,
+    "groundFriction": 1,
+    "cageBreakForce": 90,
+    "fxImpactForce": 25
+  },
+  "method": {
+    "note": "Oran yalnizca taranan sinirlar ve adim buyuklugu icindeki atislari kapsar. Oyuncunun cozumu bulacagini veya bolumun eglenceli oldugunu gostermez. Adimlar arasinda kalan dar cozumler bulunamayabilir.",
+    "grid": {
+      "3d": {
+        "aStep": 10,
+        "bStep": 10
+      },
+      "25d": {
+        "aStep": 10,
+        "bStep": 3
+      }
+    },
+    "followupGrid": {
+      "3d": {
+        "aStep": 20,
+        "bStep": 20
+      },
+      "25d": {
+        "aStep": 20,
+        "bStep": 6
+      }
+    },
+    "beam": 4
+  },
+  "levels": [
+    {
+      "level": 1,
+      "name": "İlk atış",
+      "mode": "3d",
+      "shots": 3,
+      "oneShot": {
+        "cells": 2046,
+        "winCells": 57,
+        "winRatio": 0.02785923753665689,
+        "largestRegionCells": 38,
+        "largestRegionExtent": {
+          "aMin": -30,
+          "aMax": 30,
+          "bMin": 210,
+          "bMax": 260
+        },
+        "robustWinCells": 23,
+        "sample": {
+          "a": 0,
+          "b": 230,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            -150,
+            150
+          ],
+          "b": [
+            50,
+            700
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "0.1 derece"
+        },
+        "step": {
+          "a": 10,
+          "b": 10
+        }
+      },
+      "multiShot": null,
+      "seconds": 3.291
+    },
+    {
+      "level": 1,
+      "name": "İlk atış",
+      "mode": "25d",
+      "shots": 3,
+      "oneShot": {
+        "cells": 2106,
+        "winCells": 148,
+        "winRatio": 0.07027540360873694,
+        "largestRegionCells": 148,
+        "largestRegionExtent": {
+          "aMin": 150,
+          "aMax": 760,
+          "bMin": 67,
+          "bMax": 100
+        },
+        "robustWinCells": 30,
+        "sample": {
+          "a": 420,
+          "b": 70,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            0,
+            800
+          ],
+          "b": [
+            25,
+            100
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "%"
+        },
+        "step": {
+          "a": 10,
+          "b": 3
+        }
+      },
+      "multiShot": null,
+      "seconds": 3.041
+    },
+    {
+      "level": 2,
+      "name": "Devrilen kule",
+      "mode": "3d",
+      "shots": 2,
+      "oneShot": {
+        "cells": 2046,
+        "winCells": 189,
+        "winRatio": 0.09237536656891496,
+        "largestRegionCells": 163,
+        "largestRegionExtent": {
+          "aMin": -40,
+          "aMax": 40,
+          "bMin": 110,
+          "bMax": 310
+        },
+        "robustWinCells": 122,
+        "sample": {
+          "a": 0,
+          "b": 210,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            -150,
+            150
+          ],
+          "b": [
+            50,
+            700
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "0.1 derece"
+        },
+        "step": {
+          "a": 10,
+          "b": 10
+        }
+      },
+      "multiShot": null,
+      "seconds": 2.59
+    },
+    {
+      "level": 2,
+      "name": "Devrilen kule",
+      "mode": "25d",
+      "shots": 2,
+      "oneShot": {
+        "cells": 2106,
+        "winCells": 343,
+        "winRatio": 0.16286799620132952,
+        "largestRegionCells": 343,
+        "largestRegionExtent": {
+          "aMin": 40,
+          "aMax": 750,
+          "bMin": 64,
+          "bMax": 100
+        },
+        "robustWinCells": 201,
+        "sample": {
+          "a": 320,
+          "b": 82,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            0,
+            800
+          ],
+          "b": [
+            25,
+            100
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "%"
+        },
+        "step": {
+          "a": 10,
+          "b": 3
+        }
+      },
+      "multiShot": null,
+      "seconds": 3.844
+    },
+    {
+      "level": 3,
+      "name": "İki kule",
+      "mode": "3d",
+      "shots": 2,
+      "oneShot": {
+        "cells": 2046,
+        "winCells": 76,
+        "winRatio": 0.03714565004887586,
+        "largestRegionCells": 68,
+        "largestRegionExtent": {
+          "aMin": -40,
+          "aMax": 40,
+          "bMin": 210,
+          "bMax": 320
+        },
+        "robustWinCells": 30,
+        "sample": {
+          "a": 0,
+          "b": 250,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 2,
+        "bounds": {
+          "a": [
+            -150,
+            150
+          ],
+          "b": [
+            50,
+            700
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "0.1 derece"
+        },
+        "step": {
+          "a": 10,
+          "b": 10
+        }
+      },
+      "multiShot": {
+        "shotsNeeded": 2,
+        "prefix": [
+          {
+            "a": -40,
+            "b": 190
+          }
+        ],
+        "followup": {
+          "cells": 528,
+          "winCells": 528,
+          "winRatio": 1,
+          "largestRegionCells": 528,
+          "largestRegionExtent": {
+            "aMin": -150,
+            "aMax": 150,
+            "bMin": 50,
+            "bMax": 690
+          },
+          "robustWinCells": 434,
+          "sample": {
+            "a": 10,
+            "b": 370,
+            "robust": true
+          },
+          "maxCagesBrokenOneShot": 2,
+          "bounds": {
+            "a": [
+              -150,
+              150
+            ],
+            "b": [
+              50,
+              700
+            ],
+            "aUnit": "0.1 derece",
+            "bUnit": "0.1 derece"
+          },
+          "step": {
+            "a": 20,
+            "b": 20
+          }
+        }
+      },
+      "seconds": 5.362
+    },
+    {
+      "level": 3,
+      "name": "İki kule",
+      "mode": "25d",
+      "shots": 2,
+      "oneShot": {
+        "cells": 2106,
+        "winCells": 151,
+        "winRatio": 0.07169990503323836,
+        "largestRegionCells": 125,
+        "largestRegionExtent": {
+          "aMin": 120,
+          "aMax": 420,
+          "bMin": 67,
+          "bMax": 100
+        },
+        "robustWinCells": 39,
+        "sample": {
+          "a": 260,
+          "b": 85,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 2,
+        "bounds": {
+          "a": [
+            0,
+            800
+          ],
+          "b": [
+            25,
+            100
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "%"
+        },
+        "step": {
+          "a": 10,
+          "b": 3
+        }
+      },
+      "multiShot": {
+        "shotsNeeded": 2,
+        "prefix": [
+          {
+            "a": 150,
+            "b": 91
+          }
+        ],
+        "followup": {
+          "cells": 533,
+          "winCells": 533,
+          "winRatio": 1,
+          "largestRegionCells": 533,
+          "largestRegionExtent": {
+            "aMin": 0,
+            "aMax": 800,
+            "bMin": 25,
+            "bMax": 97
+          },
+          "robustWinCells": 429,
+          "sample": {
+            "a": 400,
+            "b": 61,
+            "robust": true
+          },
+          "maxCagesBrokenOneShot": 2,
+          "bounds": {
+            "a": [
+              0,
+              800
+            ],
+            "b": [
+              25,
+              100
+            ],
+            "aUnit": "0.1 derece",
+            "bUnit": "%"
+          },
+          "step": {
+            "a": 20,
+            "b": 6
+          }
+        }
+      },
+      "seconds": 7.5
+    },
+    {
+      "level": 4,
+      "name": "Duvarın ardında",
+      "mode": "3d",
+      "shots": 3,
+      "oneShot": {
+        "cells": 2046,
+        "winCells": 107,
+        "winRatio": 0.05229716520039101,
+        "largestRegionCells": 87,
+        "largestRegionExtent": {
+          "aMin": -50,
+          "aMax": 50,
+          "bMin": 150,
+          "bMax": 230
+        },
+        "robustWinCells": 58,
+        "sample": {
+          "a": 0,
+          "b": 190,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            -150,
+            150
+          ],
+          "b": [
+            50,
+            700
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "0.1 derece"
+        },
+        "step": {
+          "a": 10,
+          "b": 10
+        }
+      },
+      "multiShot": null,
+      "seconds": 2.796
+    },
+    {
+      "level": 4,
+      "name": "Duvarın ardında",
+      "mode": "25d",
+      "shots": 3,
+      "oneShot": {
+        "cells": 2106,
+        "winCells": 262,
+        "winRatio": 0.12440645773979107,
+        "largestRegionCells": 255,
+        "largestRegionExtent": {
+          "aMin": 110,
+          "aMax": 750,
+          "bMin": 61,
+          "bMax": 100
+        },
+        "robustWinCells": 113,
+        "sample": {
+          "a": 380,
+          "b": 70,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            0,
+            800
+          ],
+          "b": [
+            25,
+            100
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "%"
+        },
+        "step": {
+          "a": 10,
+          "b": 3
+        }
+      },
+      "multiShot": null,
+      "seconds": 3.811
+    },
+    {
+      "level": 5,
+      "name": "Kilit taşı",
+      "mode": "3d",
+      "shots": 2,
+      "oneShot": {
+        "cells": 2046,
+        "winCells": 92,
+        "winRatio": 0.044965786901270774,
+        "largestRegionCells": 41,
+        "largestRegionExtent": {
+          "aMin": -30,
+          "aMax": 30,
+          "bMin": 280,
+          "bMax": 350
+        },
+        "robustWinCells": 40,
+        "sample": {
+          "a": 0,
+          "b": 310,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            -150,
+            150
+          ],
+          "b": [
+            50,
+            700
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "0.1 derece"
+        },
+        "step": {
+          "a": 10,
+          "b": 10
+        }
+      },
+      "multiShot": null,
+      "seconds": 3.812
+    },
+    {
+      "level": 5,
+      "name": "Kilit taşı",
+      "mode": "25d",
+      "shots": 2,
+      "oneShot": {
+        "cells": 2106,
+        "winCells": 191,
+        "winRatio": 0.09069325735992402,
+        "largestRegionCells": 184,
+        "largestRegionExtent": {
+          "aMin": 140,
+          "aMax": 750,
+          "bMin": 73,
+          "bMax": 100
+        },
+        "robustWinCells": 42,
+        "sample": {
+          "a": 400,
+          "b": 79,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            0,
+            800
+          ],
+          "b": [
+            25,
+            100
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "%"
+        },
+        "step": {
+          "a": 10,
+          "b": 3
+        }
+      },
+      "multiShot": null,
+      "seconds": 5.283
+    },
+    {
+      "level": 6,
+      "name": "Ağır çatı",
+      "mode": "3d",
+      "shots": 3,
+      "oneShot": {
+        "cells": 2046,
+        "winCells": 81,
+        "winRatio": 0.039589442815249266,
+        "largestRegionCells": 81,
+        "largestRegionExtent": {
+          "aMin": -40,
+          "aMax": 40,
+          "bMin": 170,
+          "bMax": 260
+        },
+        "robustWinCells": 50,
+        "sample": {
+          "a": 0,
+          "b": 220,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            -150,
+            150
+          ],
+          "b": [
+            50,
+            700
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "0.1 derece"
+        },
+        "step": {
+          "a": 10,
+          "b": 10
+        }
+      },
+      "multiShot": null,
+      "seconds": 3.806
+    },
+    {
+      "level": 6,
+      "name": "Ağır çatı",
+      "mode": "25d",
+      "shots": 3,
+      "oneShot": {
+        "cells": 2106,
+        "winCells": 114,
+        "winRatio": 0.05413105413105413,
+        "largestRegionCells": 111,
+        "largestRegionExtent": {
+          "aMin": 120,
+          "aMax": 540,
+          "bMin": 70,
+          "bMax": 100
+        },
+        "robustWinCells": 37,
+        "sample": {
+          "a": 260,
+          "b": 82,
+          "robust": true
+        },
+        "maxCagesBrokenOneShot": 1,
+        "bounds": {
+          "a": [
+            0,
+            800
+          ],
+          "b": [
+            25,
+            100
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "%"
+        },
+        "step": {
+          "a": 10,
+          "b": 3
+        }
+      },
+      "multiShot": null,
+      "seconds": 5.27
+    },
+    {
+      "level": 7,
+      "name": "Üç derinlik",
+      "mode": "3d",
+      "shots": 4,
+      "oneShot": {
+        "cells": 2046,
+        "winCells": 0,
+        "winRatio": 0,
+        "largestRegionCells": 0,
+        "largestRegionExtent": null,
+        "robustWinCells": 0,
+        "sample": null,
+        "maxCagesBrokenOneShot": 2,
+        "bounds": {
+          "a": [
+            -150,
+            150
+          ],
+          "b": [
+            50,
+            700
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "0.1 derece"
+        },
+        "step": {
+          "a": 10,
+          "b": 10
+        }
+      },
+      "multiShot": {
+        "shotsNeeded": 2,
+        "prefix": [
+          {
+            "a": -10,
+            "b": 300
+          }
+        ],
+        "followup": {
+          "cells": 528,
+          "winCells": 14,
+          "winRatio": 0.026515151515151516,
+          "largestRegionCells": 14,
+          "largestRegionExtent": {
+            "aMin": -30,
+            "aMax": 30,
+            "bMin": 130,
+            "bMax": 190
+          },
+          "robustWinCells": 4,
+          "sample": {
+            "a": 10,
+            "b": 150,
+            "robust": true
+          },
+          "maxCagesBrokenOneShot": 3,
+          "bounds": {
+            "a": [
+              -150,
+              150
+            ],
+            "b": [
+              50,
+              700
+            ],
+            "aUnit": "0.1 derece",
+            "bUnit": "0.1 derece"
+          },
+          "step": {
+            "a": 20,
+            "b": 20
+          }
+        }
+      },
+      "seconds": 5.158
+    },
+    {
+      "level": 7,
+      "name": "Üç derinlik",
+      "mode": "25d",
+      "shots": 4,
+      "oneShot": {
+        "cells": 2106,
+        "winCells": 0,
+        "winRatio": 0,
+        "largestRegionCells": 0,
+        "largestRegionExtent": null,
+        "robustWinCells": 0,
+        "sample": null,
+        "maxCagesBrokenOneShot": 2,
+        "bounds": {
+          "a": [
+            0,
+            800
+          ],
+          "b": [
+            25,
+            100
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "%"
+        },
+        "step": {
+          "a": 10,
+          "b": 3
+        }
+      },
+      "multiShot": {
+        "shotsNeeded": 2,
+        "prefix": [
+          {
+            "a": 250,
+            "b": 94
+          }
+        ],
+        "followup": {
+          "cells": 533,
+          "winCells": 50,
+          "winRatio": 0.09380863039399624,
+          "largestRegionCells": 41,
+          "largestRegionExtent": {
+            "aMin": 100,
+            "aMax": 600,
+            "bMin": 61,
+            "bMax": 97
+          },
+          "robustWinCells": 4,
+          "sample": {
+            "a": 220,
+            "b": 73,
+            "robust": true
+          },
+          "maxCagesBrokenOneShot": 3,
+          "bounds": {
+            "a": [
+              0,
+              800
+            ],
+            "b": [
+              25,
+              100
+            ],
+            "aUnit": "0.1 derece",
+            "bUnit": "%"
+          },
+          "step": {
+            "a": 20,
+            "b": 6
+          }
+        }
+      },
+      "seconds": 6.093
+    },
+    {
+      "level": 8,
+      "name": "Büyük kale",
+      "mode": "3d",
+      "shots": 3,
+      "oneShot": {
+        "cells": 2046,
+        "winCells": 5,
+        "winRatio": 0.0024437927663734115,
+        "largestRegionCells": 5,
+        "largestRegionExtent": {
+          "aMin": -20,
+          "aMax": 20,
+          "bMin": 290,
+          "bMax": 290
+        },
+        "robustWinCells": 0,
+        "sample": {
+          "a": 0,
+          "b": 290,
+          "robust": false
+        },
+        "maxCagesBrokenOneShot": 3,
+        "bounds": {
+          "a": [
+            -150,
+            150
+          ],
+          "b": [
+            50,
+            700
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "0.1 derece"
+        },
+        "step": {
+          "a": 10,
+          "b": 10
+        }
+      },
+      "multiShot": {
+        "shotsNeeded": 2,
+        "prefix": [
+          {
+            "a": -10,
+            "b": 290
+          }
+        ],
+        "followup": {
+          "cells": 528,
+          "winCells": 528,
+          "winRatio": 1,
+          "largestRegionCells": 528,
+          "largestRegionExtent": {
+            "aMin": -150,
+            "aMax": 150,
+            "bMin": 50,
+            "bMax": 690
+          },
+          "robustWinCells": 434,
+          "sample": {
+            "a": 10,
+            "b": 370,
+            "robust": true
+          },
+          "maxCagesBrokenOneShot": 3,
+          "bounds": {
+            "a": [
+              -150,
+              150
+            ],
+            "b": [
+              50,
+              700
+            ],
+            "aUnit": "0.1 derece",
+            "bUnit": "0.1 derece"
+          },
+          "step": {
+            "a": 20,
+            "b": 20
+          }
+        }
+      },
+      "seconds": 13.03
+    },
+    {
+      "level": 8,
+      "name": "Büyük kale",
+      "mode": "25d",
+      "shots": 3,
+      "oneShot": {
+        "cells": 2106,
+        "winCells": 4,
+        "winRatio": 0.001899335232668566,
+        "largestRegionCells": 1,
+        "largestRegionExtent": {
+          "aMin": 220,
+          "aMax": 220,
+          "bMin": 97,
+          "bMax": 97
+        },
+        "robustWinCells": 0,
+        "sample": {
+          "a": 220,
+          "b": 97,
+          "robust": false
+        },
+        "maxCagesBrokenOneShot": 3,
+        "bounds": {
+          "a": [
+            0,
+            800
+          ],
+          "b": [
+            25,
+            100
+          ],
+          "aUnit": "0.1 derece",
+          "bUnit": "%"
+        },
+        "step": {
+          "a": 10,
+          "b": 3
+        }
+      },
+      "multiShot": {
+        "shotsNeeded": 2,
+        "prefix": [
+          {
+            "a": 220,
+            "b": 97
+          }
+        ],
+        "followup": {
+          "cells": 533,
+          "winCells": 533,
+          "winRatio": 1,
+          "largestRegionCells": 533,
+          "largestRegionExtent": {
+            "aMin": 0,
+            "aMax": 800,
+            "bMin": 25,
+            "bMax": 97
+          },
+          "robustWinCells": 429,
+          "sample": {
+            "a": 400,
+            "b": 61,
+            "robust": true
+          },
+          "maxCagesBrokenOneShot": 3,
+          "bounds": {
+            "a": [
+              0,
+              800
+            ],
+            "b": [
+              25,
+              100
+            ],
+            "aUnit": "0.1 derece",
+            "bUnit": "%"
+          },
+          "step": {
+            "a": 20,
+            "b": 6
+          }
+        }
+      },
+      "seconds": 15.785
+    }
+  ]
+}
