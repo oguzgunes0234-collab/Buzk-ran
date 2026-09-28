@@ -1,0 +1,226 @@
+{
+ "engine": "Godot 4.7.2-stable (official) + Rapier3D",
+ "generated": "2026-09-28T06:47:55",
+ "levels": [
+  {
+   "ammo": [
+    "normal",
+    "heavy",
+    "ember"
+   ],
+   "level": 9,
+   "name": "Karışık",
+   "need": {
+    "ember": {
+     "needed": false,
+     "without_it": {
+      "last_shot_win_ratio": 0.0289256198347107,
+      "robust": false,
+      "sequence": [
+       {
+        "a": 90,
+        "b": 230,
+        "t": "normal"
+       },
+       {
+        "a": 30,
+        "b": 230,
+        "t": "normal"
+       },
+       {
+        "a": -90,
+        "b": 440,
+        "t": "heavy"
+       }
+      ],
+      "shots": 3
+     }
+    },
+    "heavy": {
+     "needed": true,
+     "without_it": {
+      "note": "Bu arama yöntemi ve çözünürlükte çözüm bulunamadı.",
+      "shots": null
+     }
+    }
+   },
+   "one_shot": {
+    "ember": {
+     "cells": 528,
+     "largest_region": 0,
+     "max_progress": 3,
+     "nest_broken": 0,
+     "robust": 0,
+     "sample": null,
+     "win_cells": 0,
+     "win_ratio": 0.0
+    },
+    "heavy": {
+     "cells": 528,
+     "largest_region": 0,
+     "max_progress": 2,
+     "nest_broken": 0,
+     "robust": 0,
+     "sample": null,
+     "win_cells": 0,
+     "win_ratio": 0.0
+    },
+    "normal": {
+     "cells": 528,
+     "largest_region": 0,
+     "max_progress": 2,
+     "nest_broken": 0,
+     "robust": 0,
+     "sample": null,
+     "win_cells": 0,
+     "win_ratio": 0.0
+    }
+   },
+   "seconds": 285.846,
+   "solution": {
+    "last_shot_win_ratio": 0.0289256198347107,
+    "robust": false,
+    "sequence": [
+     {
+      "a": 70,
+      "b": 670,
+      "t": "ember"
+     },
+     {
+      "a": -90,
+      "b": 440,
+      "t": "heavy"
+     }
+    ],
+    "shots": 2
+   }
+  },
+  {
+   "ammo": [
+    "normal",
+    "normal",
+    "heavy",
+    "ember"
+   ],
+   "level": 10,
+   "name": "Büyük kale",
+   "need": {
+    "ember": {
+     "needed": false,
+     "without_it": {
+      "last_shot_win_ratio": 0.0206611570247934,
+      "robust": false,
+      "sequence": [
+       {
+        "a": 50,
+        "b": 230,
+        "t": "normal"
+       },
+       {
+        "a": 120,
+        "b": 650,
+        "t": "normal"
+       },
+       {
+        "a": -60,
+        "b": 650,
+        "t": "normal"
+       },
+       {
+        "a": 0,
+        "b": 350,
+        "t": "heavy"
+       }
+      ],
+      "shots": 4
+     }
+    },
+    "heavy": {
+     "needed": true,
+     "without_it": {
+      "note": "Bu arama yöntemi ve çözünürlükte çözüm bulunamadı.",
+      "shots": null
+     }
+    }
+   },
+   "one_shot": {
+    "ember": {
+     "cells": 528,
+     "largest_region": 0,
+     "max_progress": 3,
+     "nest_broken": 29,
+     "robust": 0,
+     "sample": null,
+     "win_cells": 0,
+     "win_ratio": 0.0
+    },
+    "heavy": {
+     "cells": 528,
+     "largest_region": 0,
+     "max_progress": 2,
+     "nest_broken": 64,
+     "robust": 0,
+     "sample": null,
+     "win_cells": 0,
+     "win_ratio": 0.0
+    },
+    "normal": {
+     "cells": 528,
+     "largest_region": 0,
+     "max_progress": 2,
+     "nest_broken": 24,
+     "robust": 0,
+     "sample": null,
+     "win_cells": 0,
+     "win_ratio": 0.0
+    }
+   },
+   "seconds": 882.461,
+   "solution": {
+    "last_shot_win_ratio": 0.0206611570247934,
+    "robust": false,
+    "sequence": [
+     {
+      "a": 70,
+      "b": 230,
+      "t": "ember"
+     },
+     {
+      "a": -60,
+      "b": 650,
+      "t": "normal"
+     },
+     {
+      "a": 0,
+      "b": 350,
+      "t": "heavy"
+     }
+    ],
+    "shots": 3
+   }
+  }
+ ],
+ "method": {
+  "beam": 3,
+  "bounds": {
+   "pitch": [
+    5.0,
+    70.0
+   ],
+   "yaw": [
+    -15.0,
+    15.0
+   ]
+  },
+  "followup": {
+   "a": 30,
+   "b": 30
+  },
+  "grid": {
+   "a": 20,
+   "b": 20
+  },
+  "note": "Oran yalnızca taranan sınırlar ve adım büyüklüğü içindeki atışları kapsar. Oyuncunun çözümü bulacağını veya bölümün eğlenceli olduğunu göstermez."
+ },
+ "note_tr": "--coarse --need: Ağır/Köz normal Gülle ile değiştirilip aynı arama tekrarlandı. \"needed: true\" = bu aramada o mermi olmadan çözüm bulunamadı; imkânsızlık kanıtı değildir."
+}
