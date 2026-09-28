@@ -7,6 +7,7 @@ config_version=5
 config/name="Buzkıran Vadisi"
 run/main_scene="res://oyun.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://simge.png"
 boot_splash/bg_color=Color(0.86, 0.93, 0.97, 1)
 
 [display]

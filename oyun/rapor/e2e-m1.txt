@@ -1,0 +1,31 @@
+BUZKIRAN M1 · UÇTAN UCA TEST (Godot 4.7.2, Linux x86_64, llvmpipe yazılım çizimi, 390x844)
+OK   başlangıç ekranı açıldı
+B1 hedef 1, en düşük görünürlük %100, en küçük boyut 40 px
+B2 hedef 1, en düşük görünürlük %100, en küçük boyut 40 px
+B3 hedef 2, en düşük görünürlük %100, en küçük boyut 41 px
+B4 hedef 1, en düşük görünürlük %78, en küçük boyut 38 px
+B5 hedef 1, en düşük görünürlük %78, en küçük boyut 38 px
+B6 hedef 3, en düşük görünürlük %89, en küçük boyut 37 px
+B7 hedef 2, en düşük görünürlük %100, en küçük boyut 25 px
+B8 hedef 2, en düşük görünürlük %100, en küçük boyut 31 px
+B9 hedef 4, en düşük görünürlük %100, en küçük boyut 28 px
+B10 hedef 6, en düşük görünürlük %89, en küçük boyut 24 px
+OK   tur 1. bölümden başladı
+OK   B1 kazanıldı (Başardın!)
+OK   B2 kaybetme: Atış hakkı bitti
+OK   B2 kazanıldı (Başardın!)
+OK   B3 kazanıldı (Başardın!)
+OK   B4 kazanıldı (Başardın!)
+OK   B5 kazanıldı (Başardın!)
+OK   B6 kazanıldı (Başardın!)
+OK   B7 kazanıldı (Başardın!)
+OK   B8 yuva: Yuva kırıldı
+OK   B8 kazanıldı (Başardın!)
+OK   B9 taş totem ipucu: 3 kafes, 1 totem kaldı. Aynı düzeni tekrar deneyebilirsin. İpucu: gri taş totemi yalnız Ağır gülle devirir.
+OK   B9 kazanıldı (Başardın!)
+OK   B10 kazanıldı (Başardın!)
+OK   tur sonu ekranı
+TUR: 10 bölüm kazandın, 7 tanesini ilk denemede. Kazanılan bölümlerde ortalama 2,1 atış.
+TEST: 12/12 eşleşti. Bu telefonda sonuçlar bilgisayardakiyle bire bir aynı. | Referans: Linux x86_64 (bulut, masaüstü işlemci)
+OK   tutarlılık testi 12/12
+SONUC: 0 hata

@@ -1,4 +1,7 @@
-# Buzkıran Vadisi · gri kutu prototip
+# Buzkıran Vadisi · web prototipi (arşiv)
+
+> Bu klasör önceki web prototipi. Oyun artık `../oyun/` klasöründeki Godot projesinde,
+> yalnızca mobil (iPhone) için geliştiriliyor. Buradaki kod yalnızca referans için duruyor.
 
 Kısa oturumlu, fizik tabanlı bir mobil bulmaca oyunu fikrinin **web prototipi**.
 Oyuncu, arkadan bakan kameradan gülle fırlatır. Amacı buz kafeslerdeki
