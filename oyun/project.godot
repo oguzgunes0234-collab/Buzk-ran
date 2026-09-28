@@ -1,0 +1,38 @@
+; Buzkıran Vadisi - Godot 4.7 mobile project (portrait, iPhone first)
+
+config_version=5
+
+[application]
+
+config/name="Buzkıran Vadisi"
+run/main_scene="res://oyun.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.86, 0.93, 0.97, 1)
+
+[display]
+
+window/size/viewport_width=390
+window/size/viewport_height=844
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[physics]
+
+3d/physics_engine="Rapier3D"
+common/physics_ticks_per_second=60
+common/max_physics_steps_per_frame=1
+3d/default_linear_damp=0.0
+3d/default_angular_damp=0.0
+rapier/solver/num_iterations=8
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=2

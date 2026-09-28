@@ -1,0 +1,6 @@
+Bu klasör appsinacup/godot-rapier-physics v0.35.4 sürümünün "godot-rapier-3d-single"
+paketinden alındı (https://github.com/appsinacup/godot-rapier-physics/releases/tag/v0.35.4).
+Depo boyutunu küçük tutmak için bin/ altında yalnızca şu kütüphaneler var:
+  - linux x86_64 (bulut testleri), macOS (Mac'teki Godot düzenleyicisi), iOS arm64 (iPhone)
+Windows veya Android gerekirse aynı sürümün paketinden ilgili dosyayı bin/ altına kopyala.
+Lisans: LICENSE ve THIRDPARTY.txt dosyalarına bak.
