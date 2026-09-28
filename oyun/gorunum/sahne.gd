@@ -1,16 +1,18 @@
 class_name Sahne
 extends Node3D
 ## Rendering only. Nothing here feeds back into the simulation, so visual
-## randomness (particles, shake) is allowed.
+## randomness (particles, shake, idle animation) is allowed.
+## Look: "ice toy diorama" - rounded toy-like blocks, cold ice blues against a
+## warm ember orange, snowy mountains behind.
 
-const COL_HORIZON := Color("d7ebf3")
-const COL_WOOD := [Color("c9925a"), Color("bf8750"), Color("d29d66")]
-const COL_STONE := Color("7d8ea3")
+const COL_HORIZON := Color("dcecf4")
+const COL_WOOD := [Color("c98c52"), Color("bb7f47"), Color("d69b60")]
+const COL_STONE := Color("8a9ab0")
 const COL_ICE := Color("9fe3f5")
 const COL_EMBER := Color("ff7a3d")
 const COL_INK := Color("1b2a41")
 const PREVIEW_MAX := 48
-const PARTICLE_MAX := 360
+const POOL := 240
 
 var camera: Camera3D
 var base_cam_pos := Vector3.ZERO
@@ -27,21 +29,20 @@ var target_maps := {"cages": [], "totems": [], "nests": []}
 var _island: Node3D
 var _level_root: Node3D
 var _barrel_pivot: Node3D
-var _loaded_ball: MeshInstance3D
+var _muzzle_glow: StandardMaterial3D
+var _loaded := {} # ammo type -> Node3D in the barrel
+var _loaded_type := ""
 var _preview_dots: MultiMeshInstance3D
 var _preview_shadows: MultiMeshInstance3D
 var _impact_marker: Node3D
 var _blast_ring: MeshInstance3D
-var _particles: MultiMeshInstance3D
-var _p_data: Array = []
-var _p_next := 0
+var _pools := {} # shape -> {mmi, data, next}
 var _critters: Array = []
 var _flashes: Array = []
+var _chicks: Array = [] # chick nodes inside cages (idle animation)
 
-var _box_mesh := BoxMesh.new()
 var _edge_mesh: ArrayMesh
 var _mats := {}
-var _ammo_look := {}
 
 
 func _ready() -> void:
@@ -51,87 +52,22 @@ func _ready() -> void:
 
 # --- materials ------------------------------------------------------------------
 
-func _lambert(c: Color) -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.albedo_color = c
-	m.roughness = 1.0
-	m.metallic_specular = 0.2
-	return m
-
-
-func _unshaded(c: Color, on_top := false) -> StandardMaterial3D:
-	var m := StandardMaterial3D.new()
-	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	m.albedo_color = c
-	if c.a < 1.0:
-		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	if on_top:
-		m.no_depth_test = true
-		m.render_priority = 10
-	m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	return m
-
-
-func _glass(c: Color, alpha: float) -> StandardMaterial3D:
-	var m := _lambert(Color(c.r, c.g, c.b, alpha))
-	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	m.roughness = 0.15
-	m.metallic_specular = 0.9
-	return m
-
-
 func _build_materials() -> void:
 	_edge_mesh = _make_edge_mesh()
-	_mats.wood = COL_WOOD.map(func(c): return _lambert(c))
-	_mats.stone_static = _lambert(COL_STONE)
-	_mats.edge_wood = _unshaded(Color(0.357, 0.251, 0.161, 0.55))
-	_mats.edge_stone = _unshaded(Color(0.294, 0.353, 0.431, 0.6))
-	_mats.cage = _glass(COL_ICE, 0.5)
-	_mats.cage.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
-	_mats.cage.render_priority = 2
-	_mats.cage_edge = _unshaded(Color(1, 1, 1, 0.9))
-	_mats.cage_xray = _unshaded(Color(0.184, 0.561, 0.682, 0.45), true)
-	_mats.stone_block = _lambert(Color("6b7686"))
-	_mats.stone_block_edge = _unshaded(Color(0.227, 0.267, 0.322, 0.7))
-	_mats.ice_block = _glass(Color("c6f0fb"), 0.72)
-	_mats.ice_block.render_priority = 1
-	_mats.ice_block_edge = _unshaded(Color(1, 1, 1, 0.95))
-	_mats.totem = _lambert(Color("5b3f8c"))
-	_mats.totem_cap = _lambert(Color("8a6cc4"))
-	_mats.stone_totem = _lambert(Color("5d6673"))
-	_mats.stone_totem_cap = _lambert(Color("8b95a3"))
-	_mats.stone_totem_band = _lambert(Color("3a4452"))
-	_mats.totem_xray = _unshaded(Color(0.478, 0.333, 0.784, 0.45), true)
-	_mats.nest = _lambert(Color("8a5a2b"))
-	_mats.egg = _lambert(Color("faf6ea"))
-	_mats.egg_broken = _lambert(Color("ffd23f"))
-	_mats.nest_xray = _unshaded(Color(0.788, 0.541, 0.227, 0.5), true)
-	var normal := _lambert(COL_EMBER)
-	normal.emission_enabled = true
-	normal.emission = Color("ff4a10")
-	normal.emission_energy_multiplier = 0.55
-	var heavy := _lambert(Color("3d4654"))
-	var ember := _lambert(Color("ff3b1f"))
-	ember.emission_enabled = true
-	ember.emission = Color("ff2a00")
-	ember.emission_energy_multiplier = 1.0
-	_ammo_look = {
-		"normal": {"mesh": _sphere(SimConfig.AMMO.normal.radius), "mat": normal},
-		"heavy": {"mesh": _sphere(SimConfig.AMMO.heavy.radius), "mat": heavy},
-		"ember": {"mesh": _sphere(SimConfig.AMMO.ember.radius), "mat": ember},
-	}
+	_mats.wood = []
+	for i in COL_WOOD.size():
+		_mats.wood.append(Malzemeler.wood(COL_WOOD[i], i * 1.37))
+	_mats.pedestal = Malzemeler.stone(COL_STONE)
+	_mats.stone_block = Malzemeler.stone(Color("6b7686"))
+	_mats.ice_block = Malzemeler.ice(Color("7fcfe8"), 0.66, 0.3, 1)
+	_mats.cage = Malzemeler.ice(Color("8ad8ef"), 0.3, 0.22, 2)
+	_mats.cage_xray = Malzemeler.unshaded(Color(0.184, 0.561, 0.682, 0.45), true)
+	_mats.totem_xray = Malzemeler.unshaded(Color(0.478, 0.333, 0.784, 0.45), true)
+	_mats.nest_xray = Malzemeler.unshaded(Color(0.788, 0.541, 0.227, 0.5), true)
+	_mats.egg_broken = Malzemeler.lambert(Color("ffd23f"))
 
 
-func _sphere(r: float, seg := 20, rings := 14) -> SphereMesh:
-	var s := SphereMesh.new()
-	s.radius = r
-	s.height = r * 2.0
-	s.radial_segments = seg
-	s.rings = rings
-	return s
-
-
-## The 12 edges of a unit box, as a line mesh.
+## The 12 edges of a unit box, as a line mesh (x-ray outlines of hidden targets).
 func _make_edge_mesh() -> ArrayMesh:
 	var v := PackedVector3Array()
 	var c := [Vector3(-.5, -.5, -.5), Vector3(.5, -.5, -.5), Vector3(.5, -.5, .5), Vector3(-.5, -.5, .5),
@@ -156,95 +92,78 @@ func _mi(mesh: Mesh, mat: Material, scale := Vector3.ONE, pos := Vector3.ZERO) -
 	return mi
 
 
-func _grid_texture() -> ImageTexture:
-	var img := Image.create(256, 256, true, Image.FORMAT_RGBA8)
-	img.fill(Color("eef5f9"))
-	var fine := Color(0.471, 0.627, 0.725, 0.28)
-	var bold := Color(0.353, 0.51, 0.627, 0.45)
-	for i in 5:
-		var p := int(i * 51.2)
-		for k in 256:
-			for w in 2:
-				_blend(img, clampi(p + w, 0, 255), k, fine)
-				_blend(img, k, clampi(p + w, 0, 255), fine)
-	for k in 256:
-		for w in 3:
-			_blend(img, w, k, bold)
-			_blend(img, 255 - w, k, bold)
-			_blend(img, k, w, bold)
-			_blend(img, k, 255 - w, bold)
-	img.generate_mipmaps()
-	return ImageTexture.create_from_image(img)
-
-
-func _blend(img: Image, x: int, y: int, c: Color) -> void:
-	img.set_pixel(x, y, img.get_pixel(x, y).blend(c))
-
-
 # --- static world -----------------------------------------------------------------
 
 func _build_world() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_SKY
 	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color("bcdcec")
-	sky_mat.sky_horizon_color = Color("e3f1f7")
-	sky_mat.ground_horizon_color = Color("e3f1f7")
-	sky_mat.ground_bottom_color = Color("dcebf3")
-	sky_mat.sun_angle_max = 0.0
+	sky_mat.sky_top_color = Color("5e9fcc")
+	sky_mat.sky_horizon_color = Color("d9eaf3")
+	sky_mat.sky_curve = 0.12
+	sky_mat.ground_horizon_color = Color("d9eaf3")
+	sky_mat.ground_bottom_color = Color("b9d2e2")
+	sky_mat.sun_angle_max = 24.0
+	sky_mat.sun_curve = 0.08
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("e6f0f8")
-	env.ambient_light_energy = 0.42
+	env.ambient_light_color = Color("dbe9f5")
+	env.ambient_light_energy = 0.36
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 0.9
+	env.tonemap_white = 2.2
+	env.glow_enabled = true
+	env.glow_intensity = 0.35
+	env.glow_bloom = 0.04
+	env.glow_hdr_threshold = 1.4
 	env.fog_enabled = true
 	env.fog_mode = Environment.FOG_MODE_DEPTH
-	env.fog_light_color = COL_HORIZON
-	env.fog_depth_begin = 34.0
-	env.fog_depth_end = 95.0
+	env.fog_light_color = Color("cfe3ee")
+	env.fog_depth_begin = 45.0
+	env.fog_depth_end = 170.0
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 1.15
+	env.adjustment_contrast = 1.06
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
 
 	var sun := DirectionalLight3D.new()
-	sun.light_color = Color("fff4e6")
-	sun.light_energy = 0.78
+	sun.light_color = Color("fff1dc")
+	sun.light_energy = 0.85
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	sun.directional_shadow_max_distance = 40.0
 	sun.shadow_bias = 0.03
+	sun.shadow_blur = 1.6
 	add_child(sun)
 	sun.look_at_from_position(Vector3(-8, 14, -6), Vector3(0, 0, 2), Vector3.UP)
+	# soft cool fill from the opposite side so shaded faces are not flat
+	var fill := DirectionalLight3D.new()
+	fill.light_color = Color("bcd8ff")
+	fill.light_energy = 0.18
+	add_child(fill)
+	fill.look_at_from_position(Vector3(10, 6, 20), Vector3(0, 0, 0), Vector3.UP)
 
 	camera = Camera3D.new()
 	camera.near = 0.1
-	camera.far = 200.0
+	camera.far = 300.0
 	add_child(camera)
 
+	add_child(Cevre.new())
 	_island = Node3D.new()
 	add_child(_island)
-	var valley := _mi(_plane(400, 400), _lambert(Color("dcebf3")), Vector3.ONE, Vector3(0, -14, 0))
+	var valley := _mi(_plane(500, 500), Malzemeler.snow(0.0), Vector3.ONE, Vector3(0, -14, 0))
 	add_child(valley)
 
-	# launcher
-	var launcher := Node3D.new()
+	# the cannon
+	var c := Karakterler.cannon()
+	var launcher: Node3D = c[0]
 	launcher.position = SimConfig.LAUNCHER
-	var base_mesh := CylinderMesh.new()
-	base_mesh.top_radius = 0.55
-	base_mesh.bottom_radius = 0.7
-	base_mesh.height = 0.5
-	launcher.add_child(_mi(base_mesh, _mats.stone_static, Vector3.ONE, Vector3(0, -0.75, 0)))
-	launcher.add_child(_mi(_box_mesh, _mats.stone_static, Vector3(0.3, 0.55, 0.3), Vector3(0, -0.35, 0)))
-	_barrel_pivot = Node3D.new()
-	var barrel_mesh := CylinderMesh.new()
-	barrel_mesh.top_radius = 0.2
-	barrel_mesh.bottom_radius = 0.26
-	barrel_mesh.height = 1.3
-	var barrel := _mi(barrel_mesh, _lambert(Color("2c3a52")), Vector3.ONE, Vector3(0, 0, -0.35))
-	barrel.rotation = Vector3(-PI / 2.0, 0, 0) # cylinder along -z (the pivot's forward)
-	_barrel_pivot.add_child(barrel)
-	launcher.add_child(_barrel_pivot)
+	_barrel_pivot = c[1]
+	_muzzle_glow = c[2]
 	add_child(launcher)
 
 	_level_root = Node3D.new()
@@ -252,28 +171,20 @@ func _build_world() -> void:
 
 	# aiming preview: dots up to the first predicted contact, their ground shadows,
 	# a ring at the contact point and, for the ember, the blast radius
-	_preview_dots = _multimesh(_sphere(1.0, 10, 8), _unshaded(COL_EMBER), PREVIEW_MAX, false)
-	var disc := CylinderMesh.new()
-	disc.top_radius = 1.0
-	disc.bottom_radius = 1.0
-	disc.height = 0.002
-	disc.radial_segments = 16
-	var shadow_mat := _unshaded(Color(COL_INK.r, COL_INK.g, COL_INK.b, 0.22))
+	_preview_dots = _multimesh(Sekiller.sphere(1.0, 10, 8), Malzemeler.unshaded(COL_EMBER), PREVIEW_MAX, false)
+	var disc := Sekiller.cylinder(1.0, 0.002, 16)
+	var shadow_mat := Malzemeler.unshaded(Color(COL_INK.r, COL_INK.g, COL_INK.b, 0.22))
 	shadow_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
 	_preview_shadows = _multimesh(disc, shadow_mat, PREVIEW_MAX, false)
 	_impact_marker = Node3D.new()
-	var ring_mat := _unshaded(Color(COL_EMBER.r, COL_EMBER.g, COL_EMBER.b, 0.95), true)
+	var ring_mat := Malzemeler.unshaded(Color(COL_EMBER.r, COL_EMBER.g, COL_EMBER.b, 0.95), true)
 	var ring := TorusMesh.new()
 	ring.inner_radius = 0.2
 	ring.outer_radius = 0.32
 	ring.rings = 32
 	ring.ring_segments = 6
 	_impact_marker.add_child(_mi(ring, ring_mat, Vector3(1, 0.08, 1)))
-	var dot := CylinderMesh.new()
-	dot.top_radius = 0.07
-	dot.bottom_radius = 0.07
-	dot.height = 0.004
-	_impact_marker.add_child(_mi(dot, ring_mat))
+	_impact_marker.add_child(_mi(Sekiller.cylinder(0.07, 0.004, 16), ring_mat))
 	_impact_marker.visible = false
 	add_child(_impact_marker)
 	var blast := TorusMesh.new()
@@ -281,22 +192,21 @@ func _build_world() -> void:
 	blast.outer_radius = 1.0
 	blast.rings = 64
 	blast.ring_segments = 4
-	_blast_ring = _mi(blast, _unshaded(Color(1.0, 0.231, 0.122, 0.8), true), Vector3(1, 0.05, 1))
+	_blast_ring = _mi(blast, Malzemeler.unshaded(Color(1.0, 0.231, 0.122, 0.8), true), Vector3(1, 0.05, 1))
 	_blast_ring.visible = false
 	add_child(_blast_ring)
-	# the ball waiting in the launcher while aiming
-	_loaded_ball = _mi(_ammo_look.normal.mesh, _ammo_look.normal.mat, Vector3.ONE, SimConfig.LAUNCHER)
-	_loaded_ball.visible = false
-	add_child(_loaded_ball)
+	# the ball waiting in the launcher while aiming (one node per ammo type)
+	for t in SimConfig.AMMO_ORDER:
+		var n := Karakterler.ammo_node(t, SimConfig.AMMO[t].radius)
+		n.position = SimConfig.LAUNCHER
+		n.visible = false
+		add_child(n)
+		_loaded[t] = n
 
-	# particles
-	var pmat := _lambert(Color.WHITE)
-	pmat.vertex_color_use_as_albedo = true
-	_particles = _multimesh(_box_mesh, pmat, PARTICLE_MAX, true)
-	_particles.multimesh.visible_instance_count = -1
-	for i in PARTICLE_MAX:
-		_p_data.append({"life": 0.0, "p": Vector3.ZERO, "v": Vector3.ZERO, "r": Vector3.ZERO, "rv": Vector3.ZERO, "s": 0.1})
-		_particles.multimesh.set_instance_transform(i, Transform3D(Basis().scaled(Vector3.ZERO), Vector3.ZERO))
+	# particle pools: chunks (splinters, sparks), shards (ice), puffs (snow, smoke)
+	_pools.chunk = _make_pool(BoxMesh.new(), false)
+	_pools.shard = _make_pool(Sekiller.cone(0.5, 1.0, 3), false)
+	_pools.puff = _make_pool(Sekiller.sphere(0.5, 10, 6), true)
 
 
 func _plane(w: float, d: float) -> PlaneMesh:
@@ -321,21 +231,38 @@ func _multimesh(mesh: Mesh, mat: Material, count: int, colors: bool) -> MultiMes
 	return mmi
 
 
+func _make_pool(mesh: Mesh, soft: bool) -> Dictionary:
+	var mat: Material
+	if soft:
+		mat = Malzemeler.puff()
+	else:
+		var lm := Malzemeler.lambert(Color.WHITE, 0.5, 0.6)
+		lm.vertex_color_use_as_albedo = true
+		mat = lm
+	var mmi := _multimesh(mesh, mat, POOL, true)
+	var data: Array = []
+	for i in POOL:
+		data.append({"life": 0.0, "max": 1.0, "p": Vector3.ZERO, "v": Vector3.ZERO, "r": Vector3.ZERO, "rv": Vector3.ZERO, "s": 0.1, "c": Color.WHITE, "grow": 0.0})
+	return {"mmi": mmi, "data": data, "next": 0, "soft": soft}
+
+
 # --- level ------------------------------------------------------------------------------
 
 func clear_level() -> void:
 	for id in meshes:
 		meshes[id].queue_free()
 	meshes.clear()
+	_chicks.clear()
 	for c in _critters:
 		c.obj.queue_free()
 	_critters.clear()
 	for f in _flashes:
 		f.mesh.queue_free()
 	_flashes.clear()
-	for d in _p_data:
-		d.life = 0.0
-	_particles.multimesh.visible_instance_count = 0
+	for k in _pools:
+		for d in _pools[k].data:
+			d.life = 0.0
+		_pools[k].mmi.multimesh.visible_instance_count = 0
 
 
 func _build_island() -> void:
@@ -345,15 +272,14 @@ func _build_island() -> void:
 	var w: float = arena.x_half * 2.0
 	var d: float = arena.z_max - arena.z_min
 	var zc: float = (arena.z_min + arena.z_max) / 2.0
-	var top_mat := _lambert(Color.WHITE)
-	top_mat.albedo_texture = _grid_texture()
-	top_mat.uv1_scale = Vector3(w / 5.0, d / 5.0, 1)
-	top_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	var top := _mi(_plane(w, d), top_mat, Vector3.ONE, Vector3(0, 0, zc))
-	_island.add_child(top)
-	_island.add_child(_mi(_box_mesh, _lambert(Color("9fc4d8")), Vector3(w, 5, d), Vector3(0, -2.505, zc)))
-	var rim := _mi(_edge_mesh, _unshaded(Color("2f8fae")), Vector3(w, 0.02, d), Vector3(0, 0.012, zc))
-	_island.add_child(rim)
+	_island.add_child(_mi(_plane(w, d), Malzemeler.snow(), Vector3.ONE, Vector3(0, 0, zc)))
+	var cliff := _mi(Sekiller.rounded_box(Vector3(w, 5.0, d), 0.25), Malzemeler.cliff(), Vector3.ONE, Vector3(0, -2.52, zc))
+	_island.add_child(cliff)
+	# icy lip along the edge so the drop is easy to read
+	var lip := Malzemeler.ice(Color("bfeaf7"), 0.75, 0.3)
+	for side in [-1.0, 1.0]:
+		_island.add_child(_mi(Sekiller.rounded_box(Vector3(0.16, 0.08, d), 0.035), lip, Vector3.ONE, Vector3(side * (w / 2.0 - 0.08), 0.02, zc)))
+	_island.add_child(_mi(Sekiller.rounded_box(Vector3(w, 0.08, 0.16), 0.035), lip, Vector3.ONE, Vector3(0, 0.02, arena.z_max - 0.08)))
 
 
 func load_level(p_level: Dictionary, p_sim: Sim) -> void:
@@ -391,76 +317,42 @@ func _ensure_mesh(e: Dictionary) -> Node3D:
 	if kind == "ground":
 		obj.visible = false
 	elif kind == "ball":
-		var look: Dictionary = _ammo_look[e.get("ammo", "normal")]
-		var mi := _mi(look.mesh, look.mat)
-		obj.add_child(mi)
+		obj.add_child(Karakterler.ammo_node(e.get("ammo", "normal"), SimConfig.AMMO[e.get("ammo", "normal")].radius))
 	elif kind == "totem":
-		var stone: bool = e.get("mat", "wood") == "stone"
-		var t := SimConfig.TOTEM
-		obj.add_child(_mi(_box_mesh, _mats.stone_totem if stone else _mats.totem, t))
-		obj.add_child(_mi(_box_mesh, _mats.stone_totem_cap if stone else _mats.totem_cap, Vector3(t.x * 1.25, 0.16, t.z * 1.25), Vector3(0, t.y / 2.0 - 0.02, 0)))
-		var eye_mat := _unshaded(Color("7ff0ff"))
-		obj.add_child(_mi(_box_mesh, eye_mat, Vector3(0.1, 0.07, 0.02), Vector3(0.1, 0.35, -t.z / 2.0 - 0.011)))
-		obj.add_child(_mi(_box_mesh, eye_mat, Vector3(0.1, 0.07, 0.02), Vector3(-0.1, 0.35, -t.z / 2.0 - 0.011)))
-		obj.add_child(_mi(_edge_mesh, _mats.totem_xray, t))
-		if stone:
-			# darker bands so the stone totem reads as heavy even at a small size
-			for y in [-0.3, 0.1]:
-				obj.add_child(_mi(_box_mesh, _mats.stone_totem_band, Vector3(t.x + 0.02, 0.06, t.z + 0.02), Vector3(0, y, 0)))
-		obj.set_meta("eyes", eye_mat)
+		var r := Karakterler.totem(SimConfig.TOTEM, e.get("mat", "wood") == "stone")
+		obj.add_child(r[0])
+		obj.add_child(_mi(_edge_mesh, _mats.totem_xray, SimConfig.TOTEM))
+		obj.set_meta("eyes", r[1])
 	elif kind == "nest":
-		var n := SimConfig.NEST
-		obj.add_child(_mi(_box_mesh, _mats.nest, Vector3(n.x * 0.9, n.y * 0.5, n.z * 0.9), Vector3(0, -n.y * 0.25, 0)))
-		var rim := TorusMesh.new()
-		rim.inner_radius = n.x * 0.4 - 0.09
-		rim.outer_radius = n.x * 0.4 + 0.09
-		obj.add_child(_mi(rim, _mats.nest, Vector3.ONE, Vector3(0, 0.02, 0)))
-		var eggs := Node3D.new()
-		for p in [Vector2(0.12, 0.05), Vector2(-0.12, 0.06), Vector2(0, -0.12)]:
-			eggs.add_child(_mi(_sphere(0.1, 12, 10), _mats.egg, Vector3(1, 1.3, 1), Vector3(p.x, 0.08, p.y)))
-		obj.add_child(eggs)
-		obj.add_child(_mi(_edge_mesh, _mats.nest_xray, n))
-		obj.set_meta("eggs", eggs)
+		var r := Karakterler.nest(SimConfig.NEST)
+		obj.add_child(r[0])
+		obj.add_child(_mi(_edge_mesh, _mats.nest_xray, SimConfig.NEST))
+		obj.set_meta("eggs", r[1])
 	elif kind == "cage":
 		var s := SimConfig.CAGE_SIZE
-		var critter := _make_critter()
-		critter.position = Vector3(0, -0.08, 0)
-		obj.add_child(critter)
-		var shell := _mi(_box_mesh, _mats.cage, Vector3(s, s, s))
+		var chick := Karakterler.chick()
+		chick.position = Vector3(0, -0.1, 0)
+		obj.add_child(chick)
+		_chicks.append(chick)
+		var shell := _mi(Sekiller.rounded_box(Vector3(s, s, s), 0.08), _mats.cage)
 		shell.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 		obj.add_child(shell)
-		obj.add_child(_mi(_edge_mesh, _mats.cage_edge, Vector3(s, s, s)))
 		obj.add_child(_mi(_edge_mesh, _mats.cage_xray, Vector3(s, s, s)))
-		obj.set_meta("critter", critter)
+		obj.set_meta("critter", chick)
 	else:
 		var stat: bool = kind == "static"
 		var ice: bool = kind == "ice"
 		var stone: bool = e.get("mat", "") == "stone"
-		var mat: Material = _mats.stone_static if stat else _mats.ice_block if ice else _mats.stone_block if stone else _mats.wood[e.id % 3]
-		var edge: Material = _mats.edge_stone if stat else _mats.ice_block_edge if ice else _mats.stone_block_edge if stone else _mats.edge_wood
-		obj.add_child(_mi(_box_mesh, mat, e.size))
-		obj.add_child(_mi(_edge_mesh, edge, e.size))
+		var mat: Material = _mats.pedestal if stat else _mats.ice_block if ice else _mats.stone_block if stone else _mats.wood[e.id % 3]
+		var rad := 0.1 if stat else 0.07
+		var mi := _mi(Sekiller.rounded_box(e.size, rad), mat)
+		if ice:
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		obj.add_child(mi)
 	obj.set_meta("kind", kind)
 	_level_root.add_child(obj)
 	meshes[e.id] = obj
 	return obj
-
-
-func _make_critter() -> Node3D:
-	var g := Node3D.new()
-	g.add_child(_mi(_sphere(0.22, 16, 12), _lambert(Color("22314a")), Vector3(1, 1.25, 0.95)))
-	g.add_child(_mi(_sphere(0.17, 14, 10), _lambert(Color.WHITE), Vector3(1, 1.2, 0.6), Vector3(0, -0.03, -0.09)))
-	var beak_mesh := CylinderMesh.new()
-	beak_mesh.top_radius = 0.0
-	beak_mesh.bottom_radius = 0.05
-	beak_mesh.height = 0.1
-	var beak := _mi(beak_mesh, _lambert(COL_EMBER), Vector3.ONE, Vector3(0, 0.1, -0.22))
-	beak.rotation = Vector3(-PI / 2.0, 0, 0)
-	g.add_child(beak)
-	var eye_mat := _unshaded(Color("0b1320"))
-	g.add_child(_mi(_sphere(0.028, 8, 6), eye_mat, Vector3.ONE, Vector3(0.07, 0.17, -0.18)))
-	g.add_child(_mi(_sphere(0.028, 8, 6), eye_mat, Vector3.ONE, Vector3(-0.07, 0.17, -0.18)))
-	return g
 
 
 func remove_body(id: int) -> Node3D:
@@ -468,6 +360,8 @@ func remove_body(id: int) -> Node3D:
 	if m != null:
 		meshes.erase(id)
 		_level_root.remove_child(m)
+		if m.has_meta("critter"):
+			_chicks.erase(m.get_meta("critter"))
 	return m
 
 
@@ -495,10 +389,11 @@ func sync(prev, curr: Array, alpha: float) -> void:
 # --- aiming -----------------------------------------------------------------------------
 
 func set_loaded(v: bool, type := "") -> void:
-	_loaded_ball.visible = v
-	if type != "" and _ammo_look.has(type):
-		_loaded_ball.mesh = _ammo_look[type].mesh
-		_loaded_ball.material_override = _ammo_look[type].mat
+	if type != "":
+		_loaded_type = type
+	for t in _loaded:
+		_loaded[t].visible = v and t == _loaded_type
+	_muzzle_glow.emission_energy_multiplier = 1.4 if v and _loaded_type == "ember" else 0.0
 
 
 func _ray(from: Vector3, to: Vector3, exclude: Array) -> Dictionary:
@@ -585,26 +480,31 @@ func _basis_up(n: Vector3) -> Basis:
 
 # --- effects ------------------------------------------------------------------------------
 
-func spawn(pos: Vector3, count: int, color: Color, speed: float, size: float, up := 1.0) -> void:
+## shape: "chunk" (splinters, sparks), "shard" (ice), "puff" (snow, smoke; grows and fades)
+func spawn(pos: Vector3, count: int, color: Color, speed: float, size: float, up := 1.0, shape := "chunk", life := 1.0) -> void:
+	var pool: Dictionary = _pools[shape]
 	for i in count:
-		var k := _p_next
-		_p_next = (_p_next + 1) % PARTICLE_MAX
-		var d: Dictionary = _p_data[k]
-		d.life = 0.7 + randf() * 0.7
+		var k: int = pool.next
+		pool.next = (k + 1) % POOL
+		var d: Dictionary = pool.data[k]
+		d.max = life * (0.7 + randf() * 0.7)
+		d.life = d.max
 		d.p = pos + Vector3(randf() - 0.5, randf() - 0.5, randf() - 0.5) * 0.4
 		d.v = Vector3((randf() - 0.5) * speed, randf() * speed * up, (randf() - 0.5) * speed)
 		d.r = Vector3(randf() * 6.0, randf() * 6.0, randf() * 6.0)
 		d.rv = Vector3(randf() - 0.5, randf() - 0.5, randf() - 0.5) * 14.0
 		d.s = size * (0.6 + randf() * 0.8)
-		_particles.multimesh.set_instance_color(k, color)
-	_particles.multimesh.visible_instance_count = PARTICLE_MAX
+		d.c = color
+		d.grow = 1.0 if shape == "puff" else 0.0
+	pool.mmi.multimesh.visible_instance_count = POOL
 
 
 func on_break(ev: Dictionary) -> void:
 	var idx: int = ev.cage
 	var m := remove_body(target_maps.cages[idx] if idx < target_maps.cages.size() else -1)
-	spawn(ev.pos, 34, Color("bfeefa"), 6.5, 0.14, 1.2)
-	spawn(ev.pos, 14, Color.WHITE, 4.0, 0.1, 1.4)
+	spawn(ev.pos, 26, Color("bfeefa"), 6.5, 0.16, 1.2, "shard")
+	spawn(ev.pos, 12, Color.WHITE, 4.0, 0.08, 1.4, "chunk")
+	spawn(ev.pos, 6, Color(1, 1, 1, 0.8), 1.5, 0.5, 0.6, "puff", 0.8)
 	shake = maxf(shake, 0.12)
 	if m != null:
 		var critter: Node3D = m.get_meta("critter")
@@ -619,10 +519,10 @@ func on_break(ev: Dictionary) -> void:
 
 func on_impact(ev: Dictionary) -> void:
 	var f := minf(1.0, ev.force / 400.0)
-	if ev.ground and ev.kind == "ball":
-		spawn(ev.pos, 5, Color.WHITE, 2.5, 0.12)
+	if ev.ground:
+		spawn(ev.pos + Vector3(0, -0.2, 0), 3 + roundi(f * 4.0), Color(1, 1, 1, 0.75), 1.6, 0.35, 0.5, "puff", 0.7)
 	else:
-		spawn(ev.pos, 2 + roundi(f * 6.0), COL_WOOD[0], 3.0 + f * 3.0, 0.08)
+		spawn(ev.pos, 2 + roundi(f * 6.0), COL_WOOD[1], 3.0 + f * 3.0, 0.07, 1.0, "chunk")
 	shake = maxf(shake, 0.02 + f * 0.05)
 
 
@@ -630,16 +530,18 @@ func on_shatter(ev: Dictionary) -> void:
 	var m := remove_body(ev.id)
 	if m != null:
 		m.queue_free()
-	spawn(ev.pos, 26, Color("d8f6ff"), 5.0, 0.13, 1.0)
+	spawn(ev.pos, 24, Color("d8f6ff"), 5.0, 0.15, 1.0, "shard")
+	spawn(ev.pos, 4, Color(1, 1, 1, 0.7), 1.2, 0.45, 0.5, "puff", 0.7)
 	shake = maxf(shake, 0.06)
 
 
 func on_explode(ev: Dictionary) -> void:
-	spawn(ev.pos, 48, Color("ff7a1f"), 9.0, 0.16, 1.2)
-	spawn(ev.pos, 24, Color("ffd23f"), 7.0, 0.12, 1.4)
-	spawn(ev.pos, 16, Color.WHITE, 5.0, 0.1, 1.2)
-	var mat := _unshaded(Color(1.0, 0.627, 0.251, 0.55))
-	var flash := _mi(_sphere(1.0, 20, 14), mat, Vector3.ONE * 0.3, ev.pos)
+	spawn(ev.pos, 36, Color("ff7a1f"), 9.0, 0.1, 1.2, "chunk", 0.8)
+	spawn(ev.pos, 22, Color("ffd23f"), 7.0, 0.07, 1.4, "chunk", 0.7)
+	spawn(ev.pos, 10, Color(0.35, 0.35, 0.4, 0.7), 2.2, 0.8, 0.9, "puff", 1.4)
+	var mat := Malzemeler.unshaded(Color(1.0, 0.627, 0.251, 0.55))
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	var flash := _mi(Sekiller.sphere(1.0, 20, 14), mat, Vector3.ONE * 0.3, ev.pos)
 	add_child(flash)
 	_flashes.append({"mesh": flash, "mat": mat, "t": 0.0, "R": ev.radius})
 	shake = maxf(shake, 0.2)
@@ -649,8 +551,10 @@ func on_totem(ev: Dictionary) -> void:
 	var idx: int = ev.totem
 	var m: Node3D = meshes.get(target_maps.totems[idx] if idx < target_maps.totems.size() else -1)
 	if m != null and m.has_meta("eyes"):
-		(m.get_meta("eyes") as StandardMaterial3D).albedo_color = Color("2a2140")
-	spawn(ev.pos, 22, Color("b18cff"), 4.0, 0.1, 1.3)
+		var eyes: StandardMaterial3D = m.get_meta("eyes")
+		eyes.albedo_color = Color("2a2140")
+		eyes.emission_energy_multiplier = 0.0
+	spawn(ev.pos, 18, Color("b18cff"), 4.0, 0.12, 1.3, "shard")
 
 
 func on_nest(ev: Dictionary) -> void:
@@ -660,7 +564,7 @@ func on_nest(ev: Dictionary) -> void:
 		for egg in (m.get_meta("eggs") as Node3D).get_children():
 			egg.material_override = _mats.egg_broken
 			egg.scale = Vector3(1.2, 0.5, 1.2)
-	spawn(ev.pos, 18, Color("ffd23f"), 3.0, 0.09, 1.2)
+	spawn(ev.pos, 18, Color("ffd23f"), 3.0, 0.09, 1.2, "chunk")
 	shake = maxf(shake, 0.08)
 
 
@@ -709,32 +613,49 @@ func measure_targets() -> Array:
 	return out
 
 
-func _process(dt: float) -> void:
-	time += dt
-	# particles
+func _update_pool(pool: Dictionary, dt: float) -> void:
+	var mm: MultiMesh = pool.mmi.multimesh
 	var any := false
-	var mm := _particles.multimesh
-	for i in PARTICLE_MAX:
-		var d: Dictionary = _p_data[i]
+	for i in POOL:
+		var d: Dictionary = pool.data[i]
 		if d.life <= 0.0:
 			continue
 		any = true
 		d.life -= dt
 		var v: Vector3 = d.v
 		var p: Vector3 = d.p
-		v.y -= 9.8 * dt
+		var col: Color = d.c
+		var s: float = d.s
+		if pool.soft:
+			# puffs drift up a little, grow and fade
+			v *= pow(0.2, dt)
+			v.y += 0.6 * dt
+			var u: float = 1.0 - maxf(0.0, d.life) / d.max
+			s = d.s * (0.6 + u * 1.2)
+			col.a = d.c.a * (1.0 - u)
+		else:
+			v.y -= 9.8 * dt
+			s = d.s * minf(1.0, d.life * 2.5) if d.life > 0.0 else 0.0
 		p += v * dt
-		if p.y < 0.05:
+		if p.y < 0.05 and not pool.soft:
 			p.y = 0.05
 			v *= 0.4
 			v.y = absf(v.y) * 0.3
 		d.v = v
 		d.p = p
 		d.r = d.r + d.rv * dt
-		var s: float = d.s * minf(1.0, d.life * 2.5) if d.life > 0.0 else 0.0
+		if d.life <= 0.0:
+			s = 0.0
 		mm.set_instance_transform(i, Transform3D(Basis.from_euler(d.r).scaled(Vector3(s, s, s)), p))
+		mm.set_instance_color(i, col)
 	if not any and mm.visible_instance_count != 0:
 		mm.visible_instance_count = 0
+
+
+func _process(dt: float) -> void:
+	time += dt
+	for k in _pools:
+		_update_pool(_pools[k], dt)
 	for i in range(_flashes.size() - 1, -1, -1):
 		var f: Dictionary = _flashes[i]
 		f.t += dt
@@ -746,8 +667,16 @@ func _process(dt: float) -> void:
 		if u >= 1.0:
 			f.mesh.queue_free()
 			_flashes.remove_at(i)
-	(_ammo_look.ember.mat as StandardMaterial3D).emission_energy_multiplier = 0.8 + sin(time * 9.0) * 0.3
-	# rescued critters hop and float away
+	# chicks waiting in their cages: gentle bob and a blink every few seconds
+	for chick in _chicks:
+		if not is_instance_valid(chick):
+			continue
+		var ph: float = chick.get_meta("phase")
+		chick.position.y = -0.1 + sin(time * 2.6 + ph) * 0.012
+		var eyes: Node3D = chick.get_meta("eyes")
+		var blink := fmod(time + ph, 3.4) < 0.12
+		eyes.scale = Vector3(1, 0.12 if blink else 1.0, 1)
+	# rescued chicks hop and float away
 	for i in range(_critters.size() - 1, -1, -1):
 		var c: Dictionary = _critters[i]
 		c.t += dt
@@ -763,8 +692,12 @@ func _process(dt: float) -> void:
 			obj.rotation = Vector3(0, PI + sin(u * 10.0) * 0.4, 0)
 			obj.scale = Vector3.ONE * maxf(0.01, 1.0 - u * 0.5)
 		if t > 2.4:
-			c.obj.queue_free()
+			obj.queue_free()
 			_critters.remove_at(i)
+	# the ember in the barrel flickers
+	var ember: Node3D = _loaded.get("ember")
+	if ember != null and ember.visible and ember.has_meta("glow"):
+		(ember.get_meta("glow") as StandardMaterial3D).emission_energy_multiplier = 1.1 + sin(time * 9.0) * 0.35
 	# camera shake (visual only): small damped oscillation, no per-frame jitter
 	var pos := base_cam_pos
 	if shake > 0.002:

@@ -3,8 +3,12 @@
 Buza hapsolmuş yavruları kurtardığın, kısa oturumlu, fizik tabanlı bir mobil bulmaca oyunu.
 Hedef platform **iPhone**; oyun **Godot 4.7.2** ve **Rapier** fizik motoruyla yapılıyor.
 
-Şu anki durum **M1: gri kutu mobil sürüm**. Web prototipinin (v4.1) 10 bölümünün Godot'daki
-karşılığı. Yeni özellik yok; son sanat, meta, reklam ve satın alma da yok.
+Şu anki durum **M1.1: ilk görsel geçiş**. Web prototipinin (v4.1) 10 bölümünün Godot'daki
+karşılığı; oynanış ve bölümler aynı. Görünüm "buzdan oyuncak diorama" yönünde:
+yuvarlak kenarlı bloklar, ahşap/taş/buz dokuları, yavru penguenler, tekerlekli top arabası, vadide çam
+ormanı ve yağan kar. Görseller kodla üretilmiş şekiller; son sanat, meta, reklam ve satın alma yok.
+
+![Önce (M1) ve sonra (M1.1)](docs/ekran/once-sonra-b10.png)
 
 ## Klasörler
 
@@ -12,7 +16,7 @@ karşılığı. Yeni özellik yok; son sanat, meta, reklam ve satın alma da yok
 |---|---|
 | `oyun/` | Godot projesi, yani asıl mobil oyun |
 | `oyun/sim/` | Deterministik fizik çekirdeği: `sim.gd`, `levels.gd`, `config.gd`, `detmath.gd`, `referans.gd` |
-| `oyun/gorunum/` | 3D sahne, efektler, nişan önizlemesi |
+| `oyun/gorunum/` | 3D sahne (`sahne.gd`), yuvarlak kutu ve diğer şekiller (`sekiller.gd`), doku shader'ları (`malzemeler.gd`), karakterler ve top (`karakterler.gd`), vadi manzarası (`cevre.gd`) |
 | `oyun/arayuz/` | Ekranlar, göstergeler (HUD) ve mermi çubuğu |
 | `oyun/ses/` | Geçici sesler (WAV) ve titreşim |
 | `oyun/araclar/` | Test botu, referans, ses ve simge üreticileri |
@@ -68,4 +72,6 @@ Tutarlılık adalet ya da eğlence kanıtı da değildir.
 - son sanat kalitesi;
 - son performans.
 
-Gri kutu grafikler bilerek sade. Performans henüz gerçek bir iPhone'da ölçülmedi.
+Görseller kodla üretildi; son sanat için bir sanatçı ya da model paketi gerekecek. Performans henüz
+gerçek bir iPhone'da ölçülmedi. Bu ortamdaki ölçüme göre en kalabalık bölümde (B10) çizim çağrısı 138'den
+165'e çıktı.

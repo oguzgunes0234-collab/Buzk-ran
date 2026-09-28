@@ -176,7 +176,7 @@ func _button(text: String, primary := false) -> Button:
 	return b
 
 
-func _circle_tex(size: int, inner: Color, outer: Color) -> ImageTexture:
+func _circle_tex(size: int, inner: Color, outer: Color, band := Color(0, 0, 0, 0)) -> ImageTexture:
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	var c := Vector2(size, size) / 2.0
 	for y in size:
@@ -186,6 +186,8 @@ func _circle_tex(size: int, inner: Color, outer: Color) -> ImageTexture:
 			var a := clampf((1.0 - d) * size / 2.0, 0.0, 1.0)
 			var g := clampf(p.distance_to(c * Vector2(0.8, 0.7)) / (size * 0.6), 0.0, 1.0)
 			var col := inner.lerp(outer, g)
+			if band.a > 0.0 and absf(p.y - c.y) < size * 0.09:
+				col = band.lerp(outer, g * 0.4)
 			col.a *= a
 			img.set_pixel(x, y, col)
 	return ImageTexture.create_from_image(img)
@@ -325,11 +327,13 @@ func _ammo_icon(type: String) -> ImageTexture:
 	var tex: ImageTexture
 	match type:
 		"heavy":
-			tex = _circle_tex(30, Color("566174"), Color("2c3440"))
+			# stone ball with a brass band, bigger than the others
+			tex = _circle_tex(30, Color("9aa0aa"), Color("555a63"), Color("c9a45a"))
 		"ember":
 			tex = _circle_tex(26, Color("ffd23f"), Color("ff3b1f"))
 		_:
-			tex = _circle_tex(24, Color("ff9a66"), EMBER_DEEP)
+			# iron cannonball
+			tex = _circle_tex(24, Color("6d7a8f"), Color("1c222c"))
 	_icon_cache[type] = tex
 	return tex
 
@@ -359,6 +363,7 @@ func _screen(id: String) -> VBoxContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(340, 0)
 	center.add_child(card)
+	s.set_meta("card", card)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	card.add_child(box)
@@ -384,7 +389,7 @@ func _body(text: String) -> Label:
 func _build_screens() -> void:
 	# start
 	var b := _screen("baslangic")
-	b.add_child(_eyebrow("Gri kutu prototip · Godot · M1"))
+	b.add_child(_eyebrow("Prototip · Godot · M1.1 · ilk görsel geçiş"))
 	b.add_child(_label("Buzkıran Vadisi", 40, INK, true))
 	start_body = _body("Buza hapsolmuş yavruları kurtar. Basılı tut ve sürükle: sağ-sol yön, yukarı-aşağı yükseklik. Bırakınca atar. Başlangıç noktasına geri dönersen atış iptal olur.")
 	b.add_child(start_body)
@@ -487,10 +492,20 @@ func fill_levels(levels: Array) -> void:
 
 
 func show_screen(id: String) -> void:
+	var was := current_screen
 	current_screen = id
 	for k in screens:
 		screens[k].visible = k == id
 	hud.visible = id == "" or id == "sonuc"
+	if id != "" and id != was and screens.has(id):
+		# the card pops in: fade and a small scale-up
+		var card: Control = screens[id].get_meta("card")
+		card.pivot_offset = card.size / 2.0
+		card.modulate.a = 0.0
+		card.scale = Vector2(0.94, 0.94)
+		var tw := create_tween().set_parallel(true).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(card, "modulate:a", 1.0, 0.16)
+		tw.tween_property(card, "scale", Vector2.ONE, 0.22)
 
 
 func _apply_safe_area() -> void:

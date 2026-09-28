@@ -19,4 +19,5 @@ func _run() -> void:
 			await process_frame
 		await RenderingServer.frame_post_draw
 		root.get_viewport().get_texture().get_image().save_png("%s/ekran-l%s.png" % [out, args[k]])
+		print("B%s cizim cagrisi %d, ucgen %d, nesne %d" % [args[k], Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)])
 	quit()
